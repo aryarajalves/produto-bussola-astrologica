@@ -1,0 +1,16 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Instala dependências
+COPY package.json package-lock.json ./
+RUN npm install
+
+# Copia código do frontend
+COPY . .
+
+# Expõe porta do Next.js
+EXPOSE 3000
+
+# Executa em modo dev com hot reload
+CMD ["npm", "run", "dev"]

@@ -1,0 +1,46 @@
+# Web Framework
+fastapi>=0.115.11
+uvicorn[standard]==0.32.1
+
+# Database
+sqlalchemy==2.0.36
+psycopg2-binary==2.9.10
+alembic==1.14.0
+
+# Auth & Segurança
+pyjwt[crypto]>=2.9.0
+cryptography>=50.0.0
+passlib[bcrypt]==1.7.4
+bcrypt==3.2.2
+python-multipart>=0.0.31
+
+# Astrology
+kerykeion==5.12.9
+
+# Geocoding
+geopy>=2.5.0
+requests>=2.33.0
+timezonefinder>=9.0.0
+
+# AI
+openai>=1.30.0
+
+# PDF
+reportlab==4.2.5
+svglib==1.5.1
+pillow>=10.0.0
+
+# Email
+resend>=2.0.0
+
+# NotebookLM podcast (opcional — requer NOTEBOOKLM_STORAGE configurado)
+notebooklm-py>=0.1.0
+
+# Cloud Storage & Backups (Backblaze B2 / S3)
+boto3>=1.35.0
+
+# Utils
+python-dotenv>=1.2.2
+pydantic[email]==2.10.3
+pydantic-core==2.27.1
+pydantic-settings==2.6.1

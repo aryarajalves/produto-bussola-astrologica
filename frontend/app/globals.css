@@ -1,0 +1,95 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Poppins:wght@300;400;500;600&display=swap');
+
+@import "tailwindcss";
+
+* { box-sizing: border-box; }
+
+:root {
+  --bg: #050311;
+  --primary: #7F77DD;
+  --gold: #EF9F27;
+  --text: #f0eeff;
+  --muted: #8b87b8;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-weight: 300;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Serif utility */
+.serif { font-family: 'Cormorant Garamond', Georgia, serif; }
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(127,119,221,0.25); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(127,119,221,0.45); }
+
+/* ── Animations ─────────────────────────── */
+@keyframes twinkle {
+  0%, 100% { opacity: 0.15; transform: scale(0.9); }
+  50%       { opacity: 0.85; transform: scale(1.15); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-12px); }
+}
+
+@keyframes nebula {
+  0%, 100% { opacity: 0.35; transform: scale(1); }
+  50%       { opacity: 0.6;  transform: scale(1.05); }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 40px 10px rgba(127,119,221,0.2); }
+  50%       { box-shadow: 0 0 80px 20px rgba(127,119,221,0.4); }
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@layer utilities {
+  .text-balance { text-wrap: balance; }
+  .animate-fade-in-up { animation: fade-in-up 0.6s ease forwards; }
+  .animate-float { animation: float 6s ease-in-out infinite; }
+  .animate-nebula { animation: nebula 8s ease-in-out infinite; }
+  .animate-glow { animation: glow-pulse 4s ease-in-out infinite; }
+}
+
+/* Ocultar badge/indicador de desenvolvimento (botão "N" do Next.js) */
+nextjs-portal,
+[data-nextjs-toast],
+[data-nextjs-dev-overlay],
+[data-next-badge] {
+  display: none !important;
+}
+
+/* Indicador de cursor (mãozinha) em todos os botões e elementos clicáveis */
+button,
+[role="button"] {
+  cursor: pointer;
+}
+
+button:disabled,
+[role="button"]:disabled {
+  cursor: not-allowed;
+}

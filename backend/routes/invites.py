@@ -1,0 +1,506 @@
+import secrets
+from datetime import datetime, timedelta
+from typing import Optional, List
+from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
+from sqlalchemy import func, desc
+
+from database import get_db
+from models.models import User, UserInvite, RegistrationVerification
+from routes.auth import require_admin, hash_password, create_token
+from services.brevo_service import send_brevo_verification_code
+import logging
+
+logger = logging.getLogger(__name__)
+
+router = APIRouter(tags=["invites"])
+
+
+class CreateInviteRequest(BaseModel):
+    role: str = Field(..., description="'client' para Aluno ou 'admin' para Administrador")
+    validity_type: str = Field("never", description="'never', '24h', '48h', '72h'")
+
+
+class RegisterWithInviteRequest(BaseModel):
+    token: str
+    name: str
+    email: str
+    password: str
+    whatsapp: Optional[str] = None
+
+
+@router.post("/admin/invites")
+def create_invite(
+    body: CreateInviteRequest,
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """Gera um novo link de convite para cadastro de Aluno ou Admin."""
+    role = "admin" if body.role.lower() == "admin" else "client"
+    validity = body.validity_type.lower()
+    if validity not in ["never", "24h", "48h", "72h"]:
+        validity = "never"
+
+    now = datetime.utcnow()
+    expires_at = None
+    if validity == "24h":
+        expires_at = now + timedelta(hours=24)
+    elif validity == "48h":
+        expires_at = now + timedelta(hours=48)
+    elif validity == "72h":
+        expires_at = now + timedelta(hours=72)
+
+    token = secrets.token_urlsafe(32)
+
+    invite = UserInvite(
+        token=token,
+        role=role,
+        validity_type=validity,
+        expires_at=expires_at,
+        created_at=now,
+        created_by_id=current_user.id,
+        is_used=False,
+    )
+    db.add(invite)
+    db.commit()
+    db.refresh(invite)
+
+    logger.info(f"Convite gerado com sucesso pelo admin {current_user.email}: role={role}, validity={validity}")
+
+    return {
+        "id": invite.id,
+        "token": invite.token,
+        "role": invite.role,
+        "role_label": "Administrador" if invite.role == "admin" else "Aluno",
+        "validity_type": invite.validity_type,
+        "expires_at": invite.expires_at.isoformat() + "Z" if invite.expires_at else None,
+        "created_at": invite.created_at.isoformat() + "Z",
+        "invite_path": f"/cadastro?token={invite.token}",
+    }
+
+
+class BatchDeleteInvitesRequest(BaseModel):
+    ids: List[str]
+
+
+@router.delete("/admin/invites/batch")
+@router.post("/admin/invites/batch-delete")
+def delete_invites_batch(
+    body: BatchDeleteInvitesRequest,
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """Exclui múltiplos convites em lote."""
+    if not body.ids:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Nenhum convite informado para exclusão.",
+        )
+
+    deleted = db.query(UserInvite).filter(UserInvite.id.in_(body.ids)).delete(synchronize_session=False)
+    db.commit()
+    logger.info(f"Admin {current_user.email} deletou {deleted} convites em lote.")
+    return {"success": True, "deleted_count": deleted, "message": f"{deleted} convite(s) excluído(s) com sucesso."}
+
+
+@router.get("/admin/invites")
+def list_invites(
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """Lista todos os convites criados com status de uso e expiração."""
+    invites = db.query(UserInvite).order_by(desc(UserInvite.created_at)).all()
+    now = datetime.utcnow()
+
+    items = []
+    for inv in invites:
+        if inv.is_used:
+            invite_status = "used"
+        elif inv.expires_at and inv.expires_at < now:
+            invite_status = "expired"
+        else:
+            invite_status = "active"
+
+        items.append({
+            "id": inv.id,
+            "token": inv.token,
+            "role": inv.role,
+            "role_label": "Administrador" if inv.role == "admin" else "Aluno",
+            "validity_type": inv.validity_type,
+            "expires_at": inv.expires_at.isoformat() + "Z" if inv.expires_at else None,
+            "created_at": inv.created_at.isoformat() + "Z",
+            "is_used": inv.is_used,
+            "used_at": inv.used_at.isoformat() + "Z" if inv.used_at else None,
+            "status": invite_status,
+            "invite_path": f"/cadastro?token={inv.token}",
+        })
+
+    return {"items": items, "total": len(items)}
+
+
+@router.get("/auth/invite/{token}")
+def validate_invite(token: str, db: Session = Depends(get_db)):
+    """Valida se um token de convite existe e ainda é válido."""
+    invite = db.query(UserInvite).filter(UserInvite.token == token).first()
+    if not invite:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Link de convite não encontrado ou inválido.",
+        )
+
+    if invite.is_used:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Este link de convite já foi utilizado.",
+        )
+
+    if invite.expires_at and invite.expires_at < datetime.utcnow():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Este link de convite expirou.",
+        )
+
+    return {
+        "valid": True,
+        "token": invite.token,
+        "role": invite.role,
+        "role_label": "Administrador" if invite.role == "admin" else "Aluno",
+        "validity_type": invite.validity_type,
+        "expires_at": invite.expires_at.isoformat() + "Z" if invite.expires_at else None,
+    }
+
+
+def validate_strong_password(password: str) -> None:
+    """Valida se a senha atende aos requisitos de segurança: mínimo 12 caracteres, maiúscula, minúscula, número e símbolo especial."""
+    if not password or len(password) < 12:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="A senha deve conter no mínimo 12 caracteres.",
+        )
+    if not any(c.isupper() for c in password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="A senha deve conter pelo menos uma letra maiúscula.",
+        )
+    if not any(c.islower() for c in password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="A senha deve conter pelo menos uma letra minúscula.",
+        )
+    if not any(c.isdigit() for c in password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="A senha deve conter pelo menos um número.",
+        )
+    special_characters = "!@#$%^&*()_+-=[]{};':\"|,.<>/?~`\\ "
+    if not any(c in special_characters for c in password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="A senha deve conter pelo menos um caractere especial (!@#$%^&*...).",
+        )
+
+
+class VerifyRegisterCodeRequest(BaseModel):
+    token: str
+    email: str
+    code: str
+
+
+class ResendRegisterCodeRequest(BaseModel):
+    token: str
+    email: str
+
+
+@router.post("/auth/request-register-code")
+def request_register_code(
+    body: RegisterWithInviteRequest,
+    db: Session = Depends(get_db),
+):
+    """
+    Inicia o processo de cadastro via convite.
+    Valida os dados e a senha forte, gera um código OTP de 6 dígitos e envia por e-mail via Brevo.
+    A conta NÃO é criada neste momento — apenas após a confirmação do código.
+    """
+    invite = db.query(UserInvite).filter(UserInvite.token == body.token).first()
+    if not invite:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Link de convite inválido.",
+        )
+
+    if invite.is_used:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Este link de convite já foi utilizado.",
+        )
+
+    if invite.expires_at and invite.expires_at < datetime.utcnow():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Este link de convite expirou.",
+        )
+
+    clean_email = (body.email or "").strip().lower()
+    if not clean_email or "@" not in clean_email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Informe um endereço de e-mail válido.",
+        )
+
+    clean_name = (body.name or "").strip()
+    if not clean_name:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Informe o nome completo.",
+        )
+
+    # Validação de senha forte (mínimo 12 caracteres, maiúscula, minúscula, número e símbolo)
+    validate_strong_password(body.password)
+
+    # Verifica se já existe usuário cadastrado com este e-mail
+    existing_user = db.query(User).filter(func.lower(User.email) == clean_email).first()
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Este e-mail já está cadastrado no sistema.",
+        )
+
+    # Gera código numérico de 6 dígitos
+    code = f"{secrets.randbelow(900000) + 100000}"
+
+    # Remove qualquer código de verificação anterior deste e-mail
+    db.query(RegistrationVerification).filter(RegistrationVerification.email == clean_email).delete()
+
+    # Cria nova verificação com validade de 15 minutos
+    verification = RegistrationVerification(
+        email=clean_email,
+        name=clean_name,
+        whatsapp=(body.whatsapp or "").strip() or None,
+        password_hash=hash_password(body.password),
+        invite_token=body.token,
+        code=code,
+        expires_at=datetime.utcnow() + timedelta(minutes=15),
+    )
+    db.add(verification)
+    db.commit()
+
+    # Dispara e-mail via API Brevo
+    send_brevo_verification_code(to_email=clean_email, name=clean_name, code=code)
+
+    logger.info(f"Código de verificação gerado para o e-mail: {clean_email}")
+
+    return {
+        "success": True,
+        "message": "Código de verificação enviado para o seu e-mail.",
+        "email": clean_email,
+    }
+
+
+@router.post("/auth/verify-register-code")
+def verify_register_code(
+    body: VerifyRegisterCodeRequest,
+    db: Session = Depends(get_db),
+):
+    """
+    Valida o código de 6 dígitos recebido por e-mail e cria efetivamente a conta do usuário.
+    """
+    invite = db.query(UserInvite).filter(UserInvite.token == body.token).first()
+    if not invite:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Link de convite inválido.",
+        )
+
+    if invite.is_used:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Este link de convite já foi utilizado.",
+        )
+
+    if invite.expires_at and invite.expires_at < datetime.utcnow():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Este link de convite expirou.",
+        )
+
+    clean_email = (body.email or "").strip().lower()
+    clean_code = (body.code or "").strip()
+
+    verification = (
+        db.query(RegistrationVerification)
+        .filter(RegistrationVerification.email == clean_email)
+        .first()
+    )
+
+    if not verification or verification.code != clean_code:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Código de verificação incorreto ou não encontrado.",
+        )
+
+    if verification.expires_at < datetime.utcnow():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="O código de verificação expirou. Por favor, solicite um novo código.",
+        )
+
+    # Cria o novo usuário no sistema
+    new_user = User(
+        name=verification.name,
+        email=verification.email,
+        whatsapp=verification.whatsapp,
+        password_hash=verification.password_hash,
+        role=invite.role,
+        is_active=True,
+    )
+    db.add(new_user)
+    db.flush()
+
+    # Marca o convite como utilizado
+    invite.is_used = True
+    invite.used_at = datetime.utcnow()
+    invite.used_by_id = new_user.id
+
+    # Remove o registro de verificação
+    db.delete(verification)
+    db.commit()
+
+    logger.info(f"Conta verificada e criada com sucesso: {clean_email} com role {new_user.role}")
+
+    # Gera token JWT de autenticação
+    jwt_token = create_token(new_user.id, new_user.role)
+
+    return {
+        "success": True,
+        "token": jwt_token,
+        "role": new_user.role,
+        "name": new_user.name,
+        "email": new_user.email,
+        "message": "Conta verificada e criada com sucesso! Seja bem-vindo(a).",
+    }
+
+
+@router.post("/auth/resend-register-code")
+def resend_register_code(
+    body: ResendRegisterCodeRequest,
+    db: Session = Depends(get_db),
+):
+    """
+    Reenvia um novo código de verificação para o e-mail informado caso o anterior tenha expirado ou não tenha chegado.
+    """
+    invite = db.query(UserInvite).filter(UserInvite.token == body.token).first()
+    if not invite or invite.is_used:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Convite inválido ou já utilizado.",
+        )
+
+    clean_email = (body.email or "").strip().lower()
+    verification = (
+        db.query(RegistrationVerification)
+        .filter(RegistrationVerification.email == clean_email)
+        .first()
+    )
+
+    if not verification:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Nenhum cadastro pendente encontrado para este e-mail. Preencha o formulário novamente.",
+        )
+
+    # Gera novo código
+    new_code = f"{secrets.randbelow(900000) + 100000}"
+    verification.code = new_code
+    verification.expires_at = datetime.utcnow() + timedelta(minutes=15)
+    db.commit()
+
+    # Dispara e-mail via API Brevo
+    send_brevo_verification_code(to_email=clean_email, name=verification.name, code=new_code)
+
+    return {
+        "success": True,
+        "message": "Um novo código de verificação foi enviado para seu e-mail.",
+        "email": clean_email,
+    }
+
+
+@router.post("/auth/register-with-invite")
+def register_with_invite(
+    body: RegisterWithInviteRequest,
+    db: Session = Depends(get_db),
+):
+    """Cadastra um novo usuário consumindo um token de convite válido (com validação de senha forte)."""
+    invite = db.query(UserInvite).filter(UserInvite.token == body.token).first()
+    if not invite:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Link de convite inválido.",
+        )
+
+    if invite.is_used:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Este link de convite já foi utilizado.",
+        )
+
+    if invite.expires_at and invite.expires_at < datetime.utcnow():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Este link de convite expirou.",
+        )
+
+    clean_email = (body.email or "").strip().lower()
+    if not clean_email or "@" not in clean_email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Informe um endereço de e-mail válido.",
+        )
+
+    clean_name = (body.name or "").strip()
+    if not clean_name:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Informe o nome completo.",
+        )
+
+    validate_strong_password(body.password)
+
+    existing_user = db.query(User).filter(func.lower(User.email) == clean_email).first()
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Este e-mail já está cadastrado no sistema.",
+        )
+
+    # Cria o novo usuário respeitando o papel definido no convite
+    new_user = User(
+        name=clean_name,
+        email=clean_email,
+        whatsapp=(body.whatsapp or "").strip() or None,
+        password_hash=hash_password(body.password),
+        role=invite.role,
+        is_active=True,
+    )
+    db.add(new_user)
+    db.flush()
+
+    # Marca o convite como utilizado
+    invite.is_used = True
+    invite.used_at = datetime.utcnow()
+    invite.used_by_id = new_user.id
+    db.commit()
+
+    logger.info(f"Novo usuário cadastrado via convite: {clean_email} com role {new_user.role}")
+
+    # Gera token JWT de autenticação
+    jwt_token = create_token(new_user.id, new_user.role)
+
+    return {
+        "token": jwt_token,
+        "role": new_user.role,
+        "name": new_user.name,
+        "email": new_user.email,
+        "message": "Conta criada com sucesso!",
+    }
+

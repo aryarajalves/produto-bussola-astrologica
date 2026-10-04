@@ -1,0 +1,60 @@
+# 🧭 Bússola Astrológica
+
+Plataforma SaaS completa de astrologia e autoconhecimento com cálculo astronômico preciso, geração automatizada de mandalas SVG interativas com zoom/pan, relatórios em PDF, podcast cósmico com IA, área exclusiva de membros e painel de gestão com backup automático na nuvem.
+
+---
+
+## ✨ Principais Funcionalidades
+
+- **Cálculo Astronômico Preciso:** Posicionamento de planetas, cúspides de casas e aspectos utilizando astronomia real (`kerykeion`, `pyswisseph`).
+- **Mandala Astrológica Interativa:** Renderização SVG em alta definição, controles de tela cheia (100vw x 100vh), zoom in/out via botões e scroll do mouse, e navegação por arraste.
+- **Relatórios Cósmicos em PDF:** Exportação de mapa astral e interpretações aprofundadas.
+- **Painel Administrativo Completo:**
+  - **Login Cósmico Premium:** Tela em 2 colunas com formulário glassmorphism, exibição/ocultação de senha e vitrine visual da Bússola Astrológica.
+  - **Barra Lateral Categorizada:** Divisão intuitiva em "Geral" (Home, Pesquisa, Histórico) e "Segurança" (Backup Automático, Sistema de Logs, Gestão de Usuários) com perfil do usuário logado.
+  - **Pesquisa e Geração de Mapas:** Listagem permanente de todos os clientes cadastrados com seletor de data de referência para geração rápida em lote.
+  - **Histórico de Gerações:** Log completo com horário de Brasília e exclusão em lote.
+  - **Gestão de Usuários e Convites:** Controle de acessos por papéis (`super_admin`, `admin`, `client`), senhas fortes e convites com verificação de código por e-mail (Brevo).
+  - **Backups Automáticos & Logs:** Rotinas de backup do PostgreSQL com upload para a nuvem (Backblaze B2/S3), restauração com um clique e monitoramento de logs dos contêineres Docker em tempo real.
+
+---
+
+## 🛠️ Tecnologias Utilizadas
+
+### Frontend
+- **Framework:** Next.js 14 (App Router)
+- **Linguagem:** TypeScript
+- **Estilização:** Tailwind CSS (tema Glassmorphism & Neon)
+- **Testes Unitários:** Vitest & React Testing Library (130 testes unitários - 100% aprovados)
+
+### Backend
+- **Framework:** FastAPI / Python 3.11
+- **Cálculos:** Kerykeion & Swiss Ephemeris
+- **Banco de Dados:** PostgreSQL 16 com SQLAlchemy
+- **Autenticação:** JWT com hashing seguro bcrypt
+- **E-mails & Convites:** Brevo API
+- **Testes Unitários:** Pytest (68 testes unitários isolados - 100% aprovados)
+
+---
+
+## 🚀 Como Executar com Docker
+
+### Pré-requisitos
+- [Docker](https://www.docker.com/) e [Docker Compose](https://docs.docker.com/compose/) instalados.
+
+### Passo a Passo
+
+1. **Subir os contêineres:**
+   ```bash
+   docker compose -f docker/docker-compose.yml up -d --build
+   ```
+
+2. **Acessar os serviços:**
+   - **Frontend:** [http://localhost:3000](http://localhost:3000)
+   - **Painel Administrativo:** [http://localhost:3000/admin/](http://localhost:3000/admin/)
+   - **Backend API (Docs):** [http://localhost:8005/docs](http://localhost:8005/docs)
+   - **Healthcheck:** [http://localhost:8005/health](http://localhost:8005/health)
+
+3. **Executar Testes Unitários:**
+   - **Frontend:** `docker exec bussolaapp_frontend npm test -- --run`
+   - **Backend:** `docker exec -e PYTHONPATH=/app bussolaapp_backend pytest tests`

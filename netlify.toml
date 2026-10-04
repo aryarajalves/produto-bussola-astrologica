@@ -1,0 +1,49 @@
+[build]
+  base = "frontend"
+  command = "npm run build"
+  publish = "out"
+
+[[redirects]]
+  from = "/funil"
+  to = "/funil/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/funil/*"
+  to = "/funil/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/admin"
+  to = "/admin/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/admin/*"
+  to = "/admin/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/login"
+  to = "/login/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/dashboard"
+  to = "/dashboard/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/adm"
+  to = "/admin/index.html"
+  status = 301
+
+[[redirects]]
+  from = "/adm/*"
+  to = "/admin/index.html"
+  status = 301
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

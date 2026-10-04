@@ -1,0 +1,306 @@
+"use client";
+
+import React, { useState, useEffect } from "react";
+import { api } from "@/lib/api";
+
+interface AdminSidebarProps {
+  activeTab: string;
+  onSelectTab: (tab: string) => void;
+  onLogout: () => void;
+  currentUser?: { name?: string; email?: string } | null;
+}
+
+export default function AdminSidebar({
+  activeTab,
+  onSelectTab,
+  onLogout,
+  currentUser,
+}: AdminSidebarProps) {
+  const [user, setUser] = useState<{ name?: string; email?: string } | null>(currentUser || null);
+
+  useEffect(() => {
+    if (currentUser) {
+      setUser(currentUser);
+      return;
+    }
+    const token = typeof window !== "undefined" ? localStorage.getItem("sirius_token") : null;
+    if (!token) return;
+
+    api.get<{ name: string; email: string }>("/auth/me")
+      .then((res) => {
+        if (res && res.email) {
+          setUser({ name: res.name || res.email.split("@")[0], email: res.email });
+        }
+      })
+      .catch(() => {});
+  }, [currentUser]);
+  const navSections = [
+    {
+      category: "Geral",
+      items: [
+        {
+          id: "home",
+          label: "Home",
+          icon: (
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.8}
+                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+              />
+            </svg>
+          ),
+        },
+        {
+          id: "pesquisa",
+          label: "Pesquisa",
+          icon: (
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.8}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+          ),
+        },
+        {
+          id: "historico",
+          label: "Histórico",
+          icon: (
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.8}
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          ),
+        },
+      ],
+    },
+    {
+      category: "Segurança",
+      items: [
+        {
+          id: "backup_automatico",
+          label: "Backup Automático",
+          icon: (
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.8}
+                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+              />
+            </svg>
+          ),
+        },
+        {
+          id: "sistema_logs",
+          label: "Sistema de Logs",
+          icon: (
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.8}
+                d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
+            </svg>
+          ),
+        },
+        {
+          id: "gestao_usuarios",
+          label: "Gestão de Usuários",
+          icon: (
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.8}
+                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+              />
+            </svg>
+          ),
+        },
+      ],
+    },
+  ];
+
+  return (
+    <aside
+      className="w-64 h-screen sticky top-0 flex flex-col justify-between shrink-0 select-none"
+      style={{
+        background: "#110d26",
+        borderRight: "1px solid rgba(127, 119, 221, 0.15)",
+      }}
+    >
+      <div className="flex flex-col min-h-0 flex-1">
+        {/* Brand / Logo Header */}
+        <div
+          className="p-6 flex items-start gap-3 shrink-0"
+          style={{ borderBottom: "1px solid rgba(127, 119, 221, 0.12)" }}
+        >
+          <span className="text-xl leading-none mt-0.5 text-amber-400">✨</span>
+          <div>
+            <h2 className="font-bold text-base leading-tight tracking-wide text-indigo-100">
+              Bussola Astrologica
+            </h2>
+            <p className="text-xs text-indigo-300/60 font-normal mt-0.5">
+              Painel de Gestão Cósmica
+            </p>
+          </div>
+        </div>
+
+        {/* Navigation Links agrupados por Categorias */}
+        <nav className="p-4 space-y-4 overflow-y-auto flex-1">
+          {navSections.map((section) => (
+            <div key={section.category} className="space-y-1">
+              <div className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-indigo-300/40 select-none">
+                {section.category}
+              </div>
+              <div className="space-y-1">
+                {section.items.map((item) => {
+                  const isActive = activeTab === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => onSelectTab(item.id)}
+                      className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer ${
+                        isActive
+                          ? "text-indigo-100 shadow-sm"
+                          : "text-indigo-300/70 hover:text-indigo-100 hover:bg-white/[0.04]"
+                      }`}
+                      style={{
+                        background: isActive
+                          ? "rgba(127, 119, 221, 0.22)"
+                          : "transparent",
+                        border: isActive
+                          ? "1px solid rgba(127, 119, 221, 0.35)"
+                          : "1px solid transparent",
+                      }}
+                    >
+                      <span
+                        className={
+                          isActive ? "text-indigo-300" : "text-indigo-300/60"
+                        }
+                      >
+                        {item.icon}
+                      </span>
+                      <span>{item.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </nav>
+      </div>
+
+      {/* Footer / Usuário Logado e Logout */}
+      <div
+        className="p-4 space-y-3 shrink-0"
+        style={{ borderTop: "1px solid rgba(127, 119, 221, 0.12)" }}
+      >
+        {/* Card do Usuário Logado */}
+        {user?.email && (
+          <div
+            data-testid="current-user-card"
+            className="flex items-center gap-3 px-3 py-2 rounded-xl select-none"
+            style={{
+              background: "rgba(255, 255, 255, 0.03)",
+              border: "1px solid rgba(127, 119, 221, 0.15)",
+            }}
+          >
+            {/* Avatar circular com inicial */}
+            <div
+              className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs shrink-0 select-none shadow-inner"
+              style={{
+                background: "linear-gradient(135deg, rgba(127, 119, 221, 0.4), rgba(60, 52, 137, 0.6))",
+                color: "#f0eeff",
+                border: "1px solid rgba(127, 119, 221, 0.3)",
+              }}
+            >
+              {(user.name || user.email).charAt(0).toUpperCase()}
+            </div>
+
+            {/* Informações: Nome e E-mail */}
+            <div className="min-w-0 flex-1">
+              <p
+                data-testid="current-user-name"
+                className="text-xs font-semibold text-indigo-100 truncate leading-tight"
+                title={user.name || "Administrador"}
+              >
+                {user.name || "Administrador"}
+              </p>
+              <p
+                data-testid="current-user-email"
+                className="text-[11px] text-indigo-300/60 truncate leading-tight mt-0.5"
+                title={user.email}
+              >
+                {user.email}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Botão Sair */}
+        <button
+          type="button"
+          onClick={onLogout}
+          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-indigo-300/60 hover:text-red-300 hover:bg-red-500/10 transition-all cursor-pointer"
+        >
+          <svg
+            className="w-5 h-5 rotate-180"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.8}
+              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+            />
+          </svg>
+          <span>Sair</span>
+        </button>
+      </div>
+    </aside>
+  );
+}
