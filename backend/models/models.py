@@ -90,6 +90,11 @@ class GenerationLog(Base):
     status = Column(String, default="in_progress")  # in_progress | success | failed
     error_message = Column(Text, default="")
     model_used = Column(String, default="gpt-4o")
+    prompt_tokens = Column(Integer, default=0)
+    completion_tokens = Column(Integer, default=0)
+    total_tokens = Column(Integer, default=0)
+    cost_usd = Column(Float, default=0.0)
+    cost_brl = Column(Float, default=0.0)
 
 
 class UserInvite(Base):
@@ -135,3 +140,30 @@ class BackupConfig(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+
+
+class Analise(Base):
+    """Uma leitura de transitos para uma data escolhida pela pessoa.
+
+    Separada de Chart de proposito: Chart e o mapa natal, gerado uma vez e
+    entregue; Analise e consultada quantas vezes a pessoa quiser, para
+    qualquer dia, e e ela que alimenta o historico lateral da plataforma.
+    """
+    __tablename__ = "analises"
+
+    id = Column(UUID(as_uuid=False), primary_key=True, default=gen_uuid)
+    user_id = Column(UUID(as_uuid=False), ForeignKey("users.id"), nullable=False, index=True)
+    data_alvo = Column(Date, nullable=False, index=True)
+    posicoes = Column(JSONB)          # [{planeta, casa, signo, retrogrado, ate}]
+    textos = Column(JSONB)            # {planeta: interpretacao}
+    sintese = Column(Text)
+    svg_content = Column(Text)
+    # O que a pessoa disse estar em jogo quando pediu esta leitura:
+    # {"area": "carreira", "pergunta": "..."}. Fica guardado com a analise
+    # porque a pergunta de hoje nao e a de daqui a um mes, e o diario de bordo
+    # so faz sentido se guardar a pergunta junto com a resposta.
+    contexto = Column(JSONB)
+    status = Column(String, default="ok")   # ok | sem_ia | erro
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("User")

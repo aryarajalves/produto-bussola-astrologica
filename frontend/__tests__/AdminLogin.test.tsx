@@ -101,7 +101,7 @@ describe("AdminLogin Component", () => {
 
     const compassImage = screen.getByTestId("login-compass-image");
     expect(compassImage).toBeDefined();
-    expect(compassImage.getAttribute("src")).toBe("/bussola-astrologica.jpg");
+    expect(compassImage.getAttribute("src")).toBe("/logo-bussola.webp");
     expect(compassImage.getAttribute("alt")).toBe("Bússola Astrológica");
   });
 });

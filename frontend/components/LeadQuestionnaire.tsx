@@ -5,6 +5,8 @@ import CityAutocomplete from "./CityAutocomplete";
 import Toast, { ToastMessage } from "./Toast";
 
 interface LeadQuestionnaireProps {
+  /** "admin" cadastra outra pessoa; qualquer outro valor é a pessoa cadastrando a si mesma. */
+  papel?: string;
   onClientCreated?: (clientId: string) => void;
   onOpenClient?: (clientId: string) => void;
   onNavigateToSearch?: () => void;
@@ -32,7 +34,11 @@ function getCachedLead() {
   return null;
 }
 
-export default function LeadQuestionnaire({ onClientCreated, onOpenClient, onNavigateToSearch }: LeadQuestionnaireProps) {
+export default function LeadQuestionnaire({
+  papel = "client", onClientCreated, onOpenClient, onNavigateToSearch }: LeadQuestionnaireProps) {
+  // A mesma tela serve o aluno (dados dele) e o Crassus (dados de um cliente).
+  const proprio = papel !== "admin";
+
   const [mounted, setMounted] = useState(false);
   const [existingClientId, setExistingClientId] = useState<string | null>(null);
   const [name, setName] = useState<string>("");
@@ -154,7 +160,7 @@ export default function LeadQuestionnaire({ onClientCreated, onOpenClient, onNav
     setToast(null);
 
     if (!name.trim()) {
-      setToast({ type: "error", message: "Por favor, preencha o nome completo do lead." });
+      setToast({ type: "error", message: "Preencha o nome completo antes de salvar." });
       return;
     }
     if (!birthDate) {
@@ -251,10 +257,12 @@ export default function LeadQuestionnaire({ onClientCreated, onOpenClient, onNav
         </div>
         <div>
           <h2 className="text-xl font-bold tracking-wide" style={{ color: "#f0eeff" }}>
-            Coleta de Informações do Lead
+            {proprio ? "Os seus dados de nascimento" : "Dados de nascimento do cliente"}
           </h2>
           <p className="text-xs sm:text-sm" style={{ color: "#8b87b8" }}>
-            Preencha os dados essenciais para salvar o lead na base e utilizá-los no futuro.
+            {proprio
+              ? "Três dados e a sua bússola fica pronta. A hora é a que mais importa: ela move as áreas da vida quinze vezes mais rápido que a data."
+              : "Data, hora e cidade de nascimento. A hora é o dado que mais muda o resultado."}
           </p>
         </div>
       </div>
@@ -275,11 +283,13 @@ export default function LeadQuestionnaire({ onClientCreated, onOpenClient, onNav
             <div className="flex items-center gap-2">
               <span>✨</span>
               <span>
-                Informações carregadas do cadastro salvo. Você pode alterá-las e salvar novamente.
+                {proprio
+                  ? "Seus dados já estão salvos. Se algo estiver errado, corrija aqui e salve de novo."
+                  : "Informações carregadas do cadastro salvo. Você pode alterá-las e salvar novamente."}
               </span>
             </div>
             <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(52, 211, 153, 0.2)", color: "#34d399" }}>
-              Cadastrado
+              {proprio ? "Pronto" : "Cadastrado"}
             </span>
           </div>
         )}
@@ -287,7 +297,7 @@ export default function LeadQuestionnaire({ onClientCreated, onOpenClient, onNav
           {/* Campo 1: Nome Completo */}
           <div>
             <label className="text-xs font-semibold uppercase tracking-wider block mb-2" style={{ color: "#AFA9EC" }}>
-              1. Nome Completo do Lead <span className="text-red-400">*</span>
+              1. {proprio ? "Seu nome completo" : "Nome completo do cliente"} <span className="text-red-400">*</span>
             </label>
             <input
               type="text"
@@ -303,7 +313,7 @@ export default function LeadQuestionnaire({ onClientCreated, onOpenClient, onNav
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-xs font-semibold uppercase tracking-wider block mb-2" style={{ color: "#AFA9EC" }}>
-                2. Data de Nascimento <span className="text-red-400">*</span>
+                2. {proprio ? "Sua data de nascimento" : "Data de nascimento"} <span className="text-red-400">*</span>
               </label>
               <input
                 type="date"
@@ -315,7 +325,7 @@ export default function LeadQuestionnaire({ onClientCreated, onOpenClient, onNav
             </div>
             <div>
               <label className="text-xs font-semibold uppercase tracking-wider block mb-2" style={{ color: "#AFA9EC" }}>
-                3. Horário de Nascimento <span className="text-red-400">*</span>
+                3. {proprio ? "A hora em que você nasceu" : "Horário de nascimento"} <span className="text-red-400">*</span>
               </label>
               <input
                 type="time"
@@ -410,7 +420,7 @@ export default function LeadQuestionnaire({ onClientCreated, onOpenClient, onNav
                 </>
               ) : (
                 <>
-                  <span>💾 Salvar Informações do Lead</span>
+                  <span>{proprio ? "Salvar e desenhar minha bússola" : "Salvar dados do cliente"}</span>
                 </>
               )}
             </button>

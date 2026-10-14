@@ -50,11 +50,9 @@ export default function LoginPage() {
 
       saveToken(res.token);
       
-      if (res.role === "admin") {
-        router.push("/admin");
-      } else {
-        router.push("/dashboard");
-      }
+      // Uma plataforma só: os dois papéis caem no painel, que se monta
+      // conforme quem entrou. O /dashboard antigo era da Sirius.
+      router.push("/admin");
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Credenciais inválidas. Tente novamente.");
     } finally {
@@ -117,9 +115,13 @@ export default function LoginPage() {
           style={{ background: C.card, borderColor: C.border }}
         >
           {/* Logo / Icon */}
-          <div className="text-center mb-6">
-            <Link href="/" className="inline-block text-4xl mb-2 hover:scale-110 transition-transform" style={{ color: C.gold }}>
-              ✦
+          <div className="text-center mb-6 flex flex-col items-center">
+            <Link href="/" className="inline-block w-48 mb-3 hover:scale-105 transition-transform">
+              <img
+                src="/logo-bussola.webp"
+                alt="Bússola Astrológica"
+                className="w-full h-auto object-contain drop-shadow-[0_4px_16px_rgba(239,159,39,0.35)]"
+              />
             </Link>
             <h1 className="text-2xl font-bold" style={{ color: C.light }}>
               {isForgot ? "Recuperar Senha" : "Acesse Sua Conta"}

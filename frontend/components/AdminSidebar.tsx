@@ -8,6 +8,8 @@ interface AdminSidebarProps {
   onSelectTab: (tab: string) => void;
   onLogout: () => void;
   currentUser?: { name?: string; email?: string } | null;
+  /** "admin" monta o menu de gestao; qualquer outro valor monta o do aluno. */
+  papel?: string;
 }
 
 export default function AdminSidebar({
@@ -15,6 +17,7 @@ export default function AdminSidebar({
   onSelectTab,
   onLogout,
   currentUser,
+  papel = "client",
 }: AdminSidebarProps) {
   const [user, setUser] = useState<{ name?: string; email?: string } | null>(currentUser || null);
 
@@ -34,13 +37,17 @@ export default function AdminSidebar({
       })
       .catch(() => {});
   }, [currentUser]);
-  const navSections = [
+  // O papel decide o menu inteiro. Aluno nunca ve item de gestao, e nao e so
+  // estetica: ate aqui a tela de admin montava para qualquer um com token.
+  const aluno = papel !== "admin";
+
+  const navSections = ([
     {
-      category: "Geral",
+      category: aluno ? "Sua bússola" : "Geral",
       items: [
         {
           id: "home",
-          label: "Home",
+          label: aluno ? "Minha Bússola" : "Home",
           icon: (
             <svg
               className="w-5 h-5"
@@ -59,7 +66,7 @@ export default function AdminSidebar({
         },
         {
           id: "pesquisa",
-          label: "Pesquisa",
+          label: aluno ? "A leitura" : "Pesquisa",
           icon: (
             <svg
               className="w-5 h-5"
@@ -78,7 +85,7 @@ export default function AdminSidebar({
         },
         {
           id: "historico",
-          label: "Histórico",
+          label: aluno ? "Diário de bordo" : "Histórico",
           icon: (
             <svg
               className="w-5 h-5"
@@ -159,7 +166,7 @@ export default function AdminSidebar({
         },
       ],
     },
-  ];
+  ] as const).filter((sec) => !aluno || sec.category !== "Segurança");
 
   return (
     <aside
@@ -181,7 +188,7 @@ export default function AdminSidebar({
               Bussola Astrologica
             </h2>
             <p className="text-xs text-indigo-300/60 font-normal mt-0.5">
-              Painel de Gestão Cósmica
+              {aluno ? "A sua bússola" : "Painel de Gestão Cósmica"}
             </p>
           </div>
         </div>

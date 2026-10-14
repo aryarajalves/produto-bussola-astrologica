@@ -62,6 +62,25 @@ def get_client_detail_polymorphic(client_id: str, db: Session) -> Optional[Dict[
                 .all()
             )
 
+        openai_cost = None
+        if chart and isinstance(chart.chart_data, dict) and "openai_cost" in chart.chart_data:
+            openai_cost = chart.chart_data["openai_cost"]
+        else:
+            g_log = db.query(GenerationLog).filter(
+                (GenerationLog.client_id == str(user.id)) | (GenerationLog.email == user.email)
+            ).order_by(GenerationLog.created_at.desc()).first()
+            if g_log and g_log.cost_usd:
+                openai_cost = {
+                    "model": g_log.model_used or "gpt-5.6-sol",
+                    "prompt_tokens": g_log.prompt_tokens or 0,
+                    "completion_tokens": g_log.completion_tokens or 0,
+                    "total_tokens": g_log.total_tokens or 0,
+                    "cost_usd": g_log.cost_usd,
+                    "cost_brl": g_log.cost_brl,
+                    "cost_formatted_usd": f"${g_log.cost_usd:.4f}",
+                    "cost_formatted_brl": f"R$ {g_log.cost_brl:.4f}" if g_log.cost_brl else None,
+                }
+
         return {
             "id": str(user.id),
             "name": user.name,
@@ -84,12 +103,14 @@ def get_client_detail_polymorphic(client_id: str, db: Session) -> Optional[Dict[
             "created_at": user.created_at,
             "email_status": user.email_status or "not_sent",
             "email_sent_at": user.email_sent_at,
+            "openai_cost": openai_cost,
             "chart": {
                 "id": str(chart.id) if chart else None,
                 "svg_content": chart.svg_content if chart else None,
                 "chart_data": chart.chart_data if chart else None,
                 "status": chart.status if chart else None,
                 "created_at": chart.created_at if chart else None,
+                "openai_cost": openai_cost,
             } if chart else None,
             "sections": [
                 {"section_key": s.section_key, "section_order": s.section_order, "content": s.content}
@@ -145,6 +166,16 @@ def get_client_detail_polymorphic(client_id: str, db: Session) -> Optional[Dict[
             "created_at": gen_log.created_at,
             "email_status": "not_sent",
             "email_sent_at": None,
+            "openai_cost": {
+                "model": gen_log.model_used or "gpt-5.6-sol",
+                "prompt_tokens": gen_log.prompt_tokens or 0,
+                "completion_tokens": gen_log.completion_tokens or 0,
+                "total_tokens": gen_log.total_tokens or 0,
+                "cost_usd": gen_log.cost_usd,
+                "cost_brl": gen_log.cost_brl,
+                "cost_formatted_usd": f"${gen_log.cost_usd:.4f}" if gen_log.cost_usd is not None else None,
+                "cost_formatted_brl": f"R$ {gen_log.cost_brl:.4f}" if gen_log.cost_brl is not None else None,
+            } if gen_log.cost_usd else None,
             "chart": None,
             "sections": [
                 {

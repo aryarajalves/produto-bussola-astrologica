@@ -18,6 +18,13 @@ export interface LogItem {
   status: "success" | "failed" | "in_progress" | string;
   error_message?: string;
   model_used?: string;
+  prompt_tokens?: number;
+  completion_tokens?: number;
+  total_tokens?: number;
+  cost_usd?: number;
+  cost_brl?: number;
+  cost_formatted_usd?: string;
+  cost_formatted_brl?: string;
 }
 
 interface HistoricoPesquisasProps {
@@ -56,6 +63,16 @@ export default function HistoricoPesquisas({ onOpenClient }: HistoricoPesquisasP
   const safeLogs = Array.isArray(logs) ? logs : [];
   const totalPages = Math.max(1, Math.ceil(safeLogs.length / pageSize));
   const currentLogs = safeLogs.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  // Métricas e Custos OpenAI
+  const totalCostUsd = safeLogs.reduce((acc, l) => acc + (l.cost_usd || 0), 0);
+  const totalCostBrl = safeLogs.reduce((acc, l) => acc + (l.cost_brl || 0), 0);
+  const totalTokens = safeLogs.reduce((acc, l) => acc + (l.total_tokens || 0), 0);
+  const totalPromptTokens = safeLogs.reduce((acc, l) => acc + (l.prompt_tokens || 0), 0);
+  const totalCompletionTokens = safeLogs.reduce((acc, l) => acc + (l.completion_tokens || 0), 0);
+  const successCount = safeLogs.filter((l) => l.status === "success" || l.status === "ready").length;
+  const avgCostUsd = successCount > 0 ? totalCostUsd / successCount : 0;
+  const avgCostBrl = successCount > 0 ? totalCostBrl / successCount : 0;
 
   // Seleção em massa
   const isAllSelectedInPage =
@@ -173,6 +190,81 @@ export default function HistoricoPesquisas({ onOpenClient }: HistoricoPesquisasP
           )}
         </button>
       </div>
+
+      {/* Cards de Métricas OpenAI */}
+      {logs.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div
+            className="p-4 rounded-2xl relative overflow-hidden"
+            style={{
+              background: "linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(5, 150, 105, 0.05) 100%)",
+              border: "1px solid rgba(16, 185, 129, 0.25)",
+            }}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs uppercase font-semibold tracking-wider text-emerald-400">Total Investido (OpenAI)</span>
+              <span className="text-xl">💰</span>
+            </div>
+            <div className="mt-2 flex items-baseline gap-2">
+              <span className="text-2xl font-bold font-mono text-emerald-300">
+                ${totalCostUsd.toFixed(4)} USD
+              </span>
+              <span className="text-xs text-emerald-400/80 font-mono">
+                (~R$ {totalCostBrl.toFixed(2)})
+              </span>
+            </div>
+            <p className="text-[11px] text-emerald-400/60 mt-1">
+              Base de cálculo real por token consumido da API
+            </p>
+          </div>
+
+          <div
+            className="p-4 rounded-2xl relative overflow-hidden"
+            style={{
+              background: "linear-gradient(135deg, rgba(127, 119, 221, 0.15) 0%, rgba(60, 52, 137, 0.08) 100%)",
+              border: "1px solid rgba(127, 119, 221, 0.3)",
+            }}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs uppercase font-semibold tracking-wider" style={{ color: "#AFA9EC" }}>Total de Tokens</span>
+              <span className="text-xl">⚡</span>
+            </div>
+            <div className="mt-2 flex items-baseline gap-2">
+              <span className="text-2xl font-bold font-mono" style={{ color: "#f0eeff" }}>
+                {totalTokens.toLocaleString()}
+              </span>
+              <span className="text-xs font-mono" style={{ color: "#8b87b8" }}>tokens</span>
+            </div>
+            <p className="text-[11px] mt-1" style={{ color: "#8b87b8" }}>
+              {totalPromptTokens.toLocaleString()} entrada · {totalCompletionTokens.toLocaleString()} saída
+            </p>
+          </div>
+
+          <div
+            className="p-4 rounded-2xl relative overflow-hidden"
+            style={{
+              background: "linear-gradient(135deg, rgba(239, 159, 39, 0.12) 0%, rgba(217, 119, 6, 0.05) 100%)",
+              border: "1px solid rgba(239, 159, 39, 0.25)",
+            }}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs uppercase font-semibold tracking-wider text-amber-400">Custo Médio / Mapa</span>
+              <span className="text-xl">🎯</span>
+            </div>
+            <div className="mt-2 flex items-baseline gap-2">
+              <span className="text-2xl font-bold font-mono text-amber-300">
+                ${avgCostUsd.toFixed(4)}
+              </span>
+              <span className="text-xs text-amber-400/80 font-mono">
+                (~R$ {avgCostBrl.toFixed(2)})
+              </span>
+            </div>
+            <p className="text-[11px] text-amber-400/60 mt-1">
+              Média por criação com modelo OpenAI
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Barra de Ações em Massa */}
       {logs.length > 0 && (
@@ -314,6 +406,46 @@ export default function HistoricoPesquisas({ onOpenClient }: HistoricoPesquisasP
                       {log.email && !log.email.includes("@bussola.local") && <span>✉️ {log.email}</span>}
                     </div>
 
+                    {/* Custo OpenAI e Detalhes de Tokens */}
+                    {(log.model_used || (log.cost_usd != null && log.cost_usd > 0) || (log.total_tokens != null && log.total_tokens > 0)) && (
+                      <div className="flex items-center gap-2 flex-wrap pt-1">
+                        {((log.cost_usd != null && log.cost_usd > 0) || (log.total_tokens != null && log.total_tokens > 0)) && (
+                          <span
+                            className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-xs font-semibold"
+                            style={{
+                              background: "rgba(16, 185, 129, 0.12)",
+                              border: "1px solid rgba(16, 185, 129, 0.25)",
+                              color: "#34d399",
+                            }}
+                          >
+                            <span>💰 Custo:</span>
+                            <strong className="font-mono">{log.cost_formatted_usd || `$${(log.cost_usd || 0).toFixed(4)}`}</strong>
+                            <span className="opacity-80 font-mono">({log.cost_formatted_brl || `R$ ${(log.cost_brl || 0).toFixed(4)}`})</span>
+                          </span>
+                        )}
+
+                        {log.total_tokens ? (
+                          <span
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-mono"
+                            style={{
+                              background: "rgba(127, 119, 221, 0.1)",
+                              border: "1px solid rgba(127, 119, 221, 0.2)",
+                              color: "#AFA9EC",
+                            }}
+                          >
+                            <span>⚡ {log.total_tokens.toLocaleString()} tokens</span>
+                            <span className="text-[10px] text-gray-400">({log.prompt_tokens?.toLocaleString() || 0} in / {log.completion_tokens?.toLocaleString() || 0} out)</span>
+                          </span>
+                        ) : null}
+
+                        {log.model_used && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-md font-mono bg-purple-950/40 text-purple-300 border border-purple-800/30">
+                            🤖 {log.model_used}
+                          </span>
+                        )}
+                      </div>
+                    )}
+
                     {log.error_message && (
                       <p className="text-xs font-mono mt-1 text-red-400">
                         ⚠️ {log.error_message}
@@ -327,18 +459,9 @@ export default function HistoricoPesquisas({ onOpenClient }: HistoricoPesquisasP
                     {formatBrasiliaDate(log.created_at)}
                   </p>
                   <div className="flex items-center justify-end gap-2 flex-wrap">
-                    {log.model_used && (
-                      <span
-                        className="text-[10px] px-2 py-0.5 rounded-full font-mono"
-                        style={{
-                          background: "rgba(255, 255, 255, 0.05)",
-                          color: "#8b87b8",
-                          border: "1px solid rgba(127, 119, 221, 0.2)",
-                        }}
-                      >
-                        🤖 {log.model_used}
-                      </span>
-                    )}
+                    {/* O motor que gerou (kerykeion / gemini) saiu da tela: é
+                        detalhe de implementação e não diz nada a quem lê o
+                        histórico. Continua gravado no banco para depuração. */}
 
                     {/* Botão de Excluir Registro Individual */}
                     <button

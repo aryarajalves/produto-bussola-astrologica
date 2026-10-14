@@ -79,8 +79,8 @@ describe("GeneratedChartCard", () => {
     // Mandala SVG
     expect(screen.getByTestId("chart-mandala-svg")).toBeDefined();
 
-    // Botão de Baixar PDF do Mapa Astral deve estar presente
-    expect(screen.getByRole("button", { name: /Baixar PDF do Mapa Astral/i })).toBeDefined();
+    // O PDF saiu do produto: o card entrega leitura, não arquivo para baixar.
+    expect(screen.queryByRole("button", { name: /Baixar PDF/i })).toBeNull();
   });
 
   it("renderiza a lista dos 5 planetas (Lua, Sol, Mercúrio, Vênus, Marte) e suas respectivas casas logo abaixo da imagem", async () => {
@@ -111,27 +111,17 @@ describe("GeneratedChartCard", () => {
     expect(screen.queryByTestId("open-sintese-btn")).toBeNull();
   });
 
-  it("dispara download de PDF do mapa astral ao clicar no botão correspondente", async () => {
+  it("não oferece download de PDF: o card entrega leitura, não arquivo", async () => {
     (api.get as any).mockResolvedValueOnce(mockClientDetail);
-    (api.download as any).mockResolvedValueOnce(new Blob(["mock-pdf"], { type: "application/pdf" }));
-
-    const mockCreateObjectURL = vi.fn(() => "blob:mock-url");
-    const mockRevokeObjectURL = vi.fn();
-    window.URL.createObjectURL = mockCreateObjectURL;
-    window.URL.revokeObjectURL = mockRevokeObjectURL;
 
     render(<GeneratedChartCard clientId="cli-123" />);
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /Baixar PDF do Mapa Astral/i })).toBeDefined();
+      expect(screen.getByTestId("chart-mandala-svg")).toBeDefined();
     });
 
-    const pdfBtn = screen.getByRole("button", { name: /Baixar PDF do Mapa Astral/i });
-    fireEvent.click(pdfBtn);
-
-    await waitFor(() => {
-      expect(api.download).toHaveBeenCalledWith("/admin/clients/cli-123/pdf?chart_only=true");
-    });
+    expect(screen.queryByRole("button", { name: /Baixar PDF/i })).toBeNull();
+    expect(api.download).not.toHaveBeenCalled();
   });
 
   it("abre o modal de zoom ao clicar no botão Maximizar da mandala", async () => {

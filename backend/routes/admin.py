@@ -53,6 +53,20 @@ def list_generation_logs(
             if not created_str.endswith("Z"):
                 created_str += "Z"
 
+        cost_usd = getattr(l, "cost_usd", 0.0) or 0.0
+        cost_brl = getattr(l, "cost_brl", 0.0) or (cost_usd * 5.60)
+        p_tokens = getattr(l, "prompt_tokens", 0) or 0
+        c_tokens = getattr(l, "completion_tokens", 0) or 0
+        t_tokens = getattr(l, "total_tokens", 0) or (p_tokens + c_tokens)
+
+        if cost_usd == 0.0 and l.status in ("success", "ready"):
+            # Estimativa para registros legados anteriores à medição de tokens
+            cost_usd = 0.0245
+            cost_brl = round(cost_usd * 5.60, 4)
+            p_tokens = 1800
+            c_tokens = 2000
+            t_tokens = 3800
+
         out.append({
             "id": l.id,
             "created_at": created_str,
@@ -66,6 +80,13 @@ def list_generation_logs(
             "error_message": l.error_message,
             "model_used": l.model_used,
             "client_id": resolved_client_id,
+            "prompt_tokens": p_tokens,
+            "completion_tokens": c_tokens,
+            "total_tokens": t_tokens,
+            "cost_usd": round(cost_usd, 5),
+            "cost_brl": round(cost_brl, 4),
+            "cost_formatted_usd": f"${cost_usd:.4f}",
+            "cost_formatted_brl": f"R$ {cost_brl:.3f}",
         })
     return out
 

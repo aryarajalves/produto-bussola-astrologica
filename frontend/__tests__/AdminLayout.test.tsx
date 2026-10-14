@@ -52,9 +52,12 @@ describe("AdminLayout Navegação e Painel", () => {
         });
       }
       if (url.includes("/auth/me")) {
+        // O papel passou a decidir o painel inteiro: sem ele nada de gestão
+        // é desenhado, que é exatamente a proteção contra o vazamento antigo.
         return Promise.resolve({
           name: "Aryaraj Fernandes",
           email: "aryarajunity@gmail.com",
+          role: "admin",
         });
       }
       return Promise.resolve({});
@@ -96,7 +99,7 @@ describe("AdminLayout Navegação e Painel", () => {
     render(<AdminPage />);
 
     await waitFor(() => {
-      expect(screen.getByText(/Coleta de Informações do Lead/i)).toBeDefined();
+      expect(screen.getByText(/Dados de nascimento do cliente/i)).toBeDefined();
     });
 
     expect(screen.queryByText("Total de Leads")).toBeNull();
@@ -187,7 +190,7 @@ describe("AdminLayout Navegação e Painel", () => {
     render(<AdminPage />);
 
     await waitFor(() => {
-      expect(screen.getByText(/Coleta de Informações do Lead/i)).toBeDefined();
+      expect(screen.getByText(/Dados de nascimento do cliente/i)).toBeDefined();
     });
 
     expect(screen.getByPlaceholderText(/Ex: Gabriel Moreira Silva/i)).toBeDefined();

@@ -33,7 +33,8 @@ export default function AdminLogin() {
     setSuccessMsg("");
     try {
       const res = await api.post<{ token: string; role: string }>("/auth/login", { email, password });
-      if (res.role !== "admin") { setError("Acesso restrito a administradores."); return; }
+      // Aluno e admin entram pela mesma porta: o painel monta de um jeito ou
+      // de outro conforme o papel. Barrar aqui era o que criava dois mundos.
       saveToken(res.token);
       router.push("/admin");
     } catch (e: unknown) {
@@ -78,18 +79,25 @@ export default function AdminLogin() {
       >
         {/* Left Column: Form Fields */}
         <div className="p-8 md:p-12 flex flex-col justify-center">
-          <div className="mb-8">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium mb-3 bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
-              <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
-              Painel Administrativo
+          <div className="mb-6">
+            <div className="w-44 md:w-52 mb-4">
+              <img
+                src="/logo-bussola.webp"
+                alt="Bússola Astrológica"
+                className="w-full h-auto object-contain drop-shadow-[0_4px_16px_rgba(239,159,39,0.35)]"
+              />
             </div>
-            <h1 className="text-3xl font-bold tracking-tight" style={{ color: C.text }}>
-              Bússola Astrológica
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium mb-2 bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
+              <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
+              A sua bússola
+            </div>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight" style={{ color: C.text }}>
+              Acesso ao Painel
             </h1>
             <p className="text-sm mt-1" style={{ color: C.muted }}>
               {isForgot
                 ? "Recuperação de credenciais de acesso"
-                : "Entre com suas credenciais de administrador"}
+                : "Entre para ler o seu mapa e previsões"}
             </p>
           </div>
 
@@ -271,28 +279,24 @@ export default function AdminLogin() {
           <div className="absolute inset-0 bg-radial from-indigo-500/20 via-transparent to-transparent pointer-events-none" />
 
           <div className="relative z-10 flex flex-col items-center text-center">
-            {/* Golden Compass Image Frame */}
+            {/* Golden Compass Logo Frame */}
             <div
-              className="relative w-64 h-64 lg:w-72 lg:h-72 rounded-full p-2.5 mb-6 flex items-center justify-center overflow-hidden transition-all duration-500 hover:scale-[1.02]"
-              style={{
-                background: "linear-gradient(135deg, rgba(200, 160, 90, 0.4), rgba(127, 119, 221, 0.3), rgba(60, 52, 137, 0.2))",
-                boxShadow: "0 0 45px rgba(200, 160, 90, 0.25), 0 0 35px rgba(127, 119, 221, 0.3)",
-                border: "1px solid rgba(220, 180, 100, 0.3)",
-              }}
+              className="relative w-72 lg:w-80 mb-6 flex items-center justify-center transition-all duration-500 hover:scale-[1.03]"
             >
+              <div
+                className="absolute inset-0 rounded-full blur-2xl opacity-40 pointer-events-none"
+                style={{ background: "radial-gradient(circle, rgba(239,159,39,0.4) 0%, rgba(127,119,221,0.2) 60%, transparent 80%)" }}
+              />
               <img
-                src="/bussola-astrologica.jpg"
+                src="/logo-bussola.webp"
                 alt="Bússola Astrológica"
                 data-testid="login-compass-image"
-                className="w-full h-full object-cover rounded-full shadow-inner"
+                className="w-full h-auto object-contain drop-shadow-[0_12px_32px_rgba(239,159,39,0.35)] relative z-10"
               />
             </div>
 
-            <h2 className="text-xl font-bold tracking-wider" style={{ color: C.text }}>
-              Bússola Astrológica
-            </h2>
             <p className="text-xs max-w-xs mt-2 leading-relaxed" style={{ color: C.muted }}>
-              Guia celeste e cálculos astrológicos precisos com sabedoria ancestral.
+              Guia celeste e previsões diárias com sabedoria ancestral e cálculo astronômico preciso.
             </p>
           </div>
         </div>

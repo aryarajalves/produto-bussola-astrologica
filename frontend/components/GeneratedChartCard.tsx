@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import ChartZoomModal from "@/components/ChartZoomModal";
+import LeituraCliente from "@/components/LeituraCliente";
 
 interface ClientDetail {
   id: string;
@@ -42,7 +43,6 @@ export default function GeneratedChartCard({
   const [data, setData] = useState<ClientDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [pdfLoading, setPdfLoading] = useState(false);
   const [isZoomOpen, setIsZoomOpen] = useState(false);
 
   useEffect(() => {
@@ -74,26 +74,6 @@ export default function GeneratedChartCard({
       isMounted = false;
     };
   }, [clientId]);
-
-  const handleDownloadPdf = async () => {
-    if (!data) return;
-    setPdfLoading(true);
-    try {
-      const blob = await api.download(`/admin/clients/${data.id}/pdf?chart_only=true`);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `mapa-astral-${data.name.toLowerCase().replace(/ /g, "-")}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    } catch {
-      alert("Erro ao baixar o PDF do mapa astral.");
-    } finally {
-      setPdfLoading(false);
-    }
-  };
 
   if (loading) {
     return (
@@ -434,23 +414,13 @@ export default function GeneratedChartCard({
             </div>
           </div>
 
-          {/* Botão de Ação: Baixar PDF do Mapa Astral */}
-          <div className="pt-2">
-            <button
-              type="button"
-              onClick={handleDownloadPdf}
-              disabled={pdfLoading}
-              className="w-full sm:w-auto px-6 py-3.5 rounded-xl text-xs sm:text-sm font-semibold transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-2.5 cursor-pointer disabled:opacity-50 shadow-lg"
-              style={{
-                background: "linear-gradient(135deg, #7F77DD, #3C3489)",
-                color: "#ffffff",
-                boxShadow: "0 0 20px rgba(127, 119, 221, 0.35)",
-              }}
-            >
-              <span className="text-base">{pdfLoading ? "⏳" : "📥"}</span>
-              <span>{pdfLoading ? "Baixando PDF..." : "Baixar PDF do Mapa Astral"}</span>
-            </button>
-          </div>
+        </div>
+
+        {/* A leitura do dia. A lista acima é o mapa de nascimento, que é
+            referência fixa; é AQUI que sai o direcionamento, porque é aqui
+            que o céu de uma data encontra o mapa dessa pessoa. */}
+        <div className="px-5 pb-5 sm:px-6 sm:pb-6">
+          <LeituraCliente clienteId={data.id} nome={data.name} />
         </div>
       </div>
 

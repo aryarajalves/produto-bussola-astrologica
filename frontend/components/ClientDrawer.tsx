@@ -148,6 +148,40 @@ export default function ClientDrawer({
             ))}
           </div>
 
+          {/* Custo de Criação OpenAI */}
+          {(() => {
+            const clientCost = client.openai_cost || (client.chart as any)?.openai_cost || (client.chart?.chart_data as any)?.openai_cost;
+            if (!clientCost) return null;
+            return (
+              <div
+                className="mt-3 rounded-xl p-3 flex items-center justify-between gap-3 flex-wrap"
+                style={{ background: "rgba(16, 185, 129, 0.1)", border: "1px solid rgba(16, 185, 129, 0.25)" }}
+              >
+                <div>
+                  <p className="text-xs font-semibold text-emerald-400">💰 Custo de Criação (OpenAI)</p>
+                  <div className="flex items-baseline gap-2 mt-0.5">
+                    <span className="text-sm font-bold font-mono text-emerald-300">
+                      {clientCost.cost_formatted_usd || `$${(clientCost.cost_usd || 0).toFixed(4)}`} USD
+                    </span>
+                    <span className="text-xs text-emerald-400/80 font-mono">
+                      ({clientCost.cost_formatted_brl || `R$ ${(clientCost.cost_brl || 0).toFixed(4)}`})
+                    </span>
+                  </div>
+                </div>
+                {clientCost.total_tokens ? (
+                  <div className="text-right">
+                    <span className="text-xs font-mono text-purple-300">
+                      ⚡ {clientCost.total_tokens.toLocaleString()} tokens
+                    </span>
+                    <p className="text-[10px] text-gray-400 font-mono">
+                      {clientCost.model || "gpt-5.6-sol"}
+                    </p>
+                  </div>
+                ) : null}
+              </div>
+            );
+          })()}
+
           {needsCompletion && (
             <div
               className="mt-3 rounded-xl p-3 flex items-center justify-between gap-3"
