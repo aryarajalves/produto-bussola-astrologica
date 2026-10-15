@@ -1,7 +1,7 @@
 import io
 import logging
-from datetime import date, datetime, timedelta
-from typing import Optional
+from datetime import date, datetime, timedelta, time as dtime
+from typing import Optional, List
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.concurrency import run_in_threadpool
@@ -19,6 +19,8 @@ from services.transit_service import AREAS
 from services.analise_service import gerar_analise
 from services.interpretacoes import interpretacao
 from services.ai_service import generate_transit_synthesis
+from services.astro_service import generate_birth_chart
+from services.geocoding_service import city_to_coordinates
 
 router = APIRouter(prefix="/members", tags=["members"])
 logger = logging.getLogger(__name__)
@@ -46,6 +48,167 @@ def get_chart(current_user: User = Depends(get_current_user), db: Session = Depe
         "rising_sign": chart.rising_sign,
         "status": chart.status,
         "created_at": chart.created_at,
+    }
+
+
+class MemberBirthDataRequest(BaseModel):
+    name: Optional[str] = None
+    birth_date: date
+    birth_time: Optional[str] = "12:00"
+    birth_city: str
+    birth_state: Optional[str] = ""
+    birth_country: Optional[str] = "Brasil"
+    lat: Optional[float] = None
+    lng: Optional[float] = None
+    tz_str: Optional[str] = None
+    is_dst: Optional[bool] = None
+    focus_areas: Optional[List[str]] = []
+
+
+@router.get("/birth-data")
+def get_member_birth_data(current_user: User = Depends(get_current_user)):
+    """Retorna os dados cadastrais e de nascimento do usuário logado."""
+    has_data = bool(current_user.birth_date and current_user.lat is not None and current_user.lng is not None)
+    return {
+        "has_data": has_data,
+        "name": current_user.name or "",
+        "email": current_user.email or "",
+        "birth_date": current_user.birth_date.isoformat() if current_user.birth_date else None,
+        "birth_time": current_user.birth_time.strftime("%H:%M") if current_user.birth_time else "12:00",
+        "birth_city": current_user.birth_city or "",
+        "birth_state": current_user.birth_state or "",
+        "birth_country": current_user.birth_country or "Brasil",
+        "sun_sign": current_user.sun_sign or "",
+        "moon_sign": current_user.moon_sign or "",
+        "rising_sign": current_user.rising_sign or "",
+        "focus_areas": current_user.focus_areas or [],
+    }
+
+
+@router.post("/birth-data")
+async def save_member_birth_data(
+    body: MemberBirthDataRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Coleta e salva os dados de nascimento do usuário logado, calcula as coordenadas,
+    gera o mapa natal astronômico (SVG e signos) e salva no banco.
+    """
+    import asyncio
+
+    if body.name and body.name.strip():
+        current_user.name = body.name.strip()
+
+    birth_city = (body.birth_city or "").strip()
+    if body.lat is not None and body.lng is not None:
+        coords = {
+            "lat": float(body.lat),
+            "lng": float(body.lng),
+            "tz_str": body.tz_str or "America/Sao_Paulo",
+        }
+    else:
+        try:
+            coords = await asyncio.to_thread(
+                city_to_coordinates,
+                birth_city,
+                body.birth_state or "",
+                body.birth_country or "Brasil",
+            )
+        except Exception as e:
+            logger.warning(f"Geocoding fallback em save_member_birth_data: {e}")
+            coords = {"lat": -23.5505, "lng": -46.6333, "tz_str": "America/Sao_Paulo"}
+
+    tz_str = coords.get("tz_str") or "America/Sao_Paulo"
+
+    try:
+        hour, minute = [int(p) for p in (body.birth_time or "12:00").split(":")]
+    except Exception:
+        hour, minute = 12, 0
+
+    try:
+        astro = await asyncio.to_thread(
+            generate_birth_chart,
+            name=current_user.name,
+            year=body.birth_date.year,
+            month=body.birth_date.month,
+            day=body.birth_date.day,
+            hour=hour,
+            minute=minute,
+            lat=coords["lat"],
+            lng=coords["lng"],
+            tz_str=tz_str,
+            is_dst=body.is_dst,
+            city_name=birth_city,
+            country_name=body.birth_country or "Brasil",
+        )
+        chart_data = astro.get("chart_data", {})
+        svg_content = astro.get("svg", "")
+        sun_sign = chart_data.get("sun", {}).get("sign", "")
+        moon_sign = chart_data.get("moon", {}).get("sign", "")
+        rising_sign = chart_data.get("rising", {}).get("sign", "")
+    except Exception as e:
+        logger.error(f"Erro ao calcular mapa natal do membro: {e}", exc_info=True)
+        chart_data = {}
+        svg_content = ""
+        sun_sign = ""
+        moon_sign = ""
+        rising_sign = ""
+
+    current_user.birth_date = body.birth_date
+    current_user.birth_time = dtime(hour, minute)
+    current_user.birth_city = birth_city
+    current_user.birth_state = body.birth_state or ""
+    current_user.birth_country = body.birth_country or "Brasil"
+    current_user.tz_str = tz_str
+    current_user.lat = coords.get("lat")
+    current_user.lng = coords.get("lng")
+    if sun_sign:
+        current_user.sun_sign = sun_sign
+    if moon_sign:
+        current_user.moon_sign = moon_sign
+    if rising_sign:
+        current_user.rising_sign = rising_sign
+    if body.focus_areas:
+        current_user.focus_areas = body.focus_areas
+
+    # Atualiza ou cria o Chart do usuário
+    chart = (
+        db.query(Chart)
+        .filter(Chart.user_id == current_user.id)
+        .order_by(Chart.created_at.desc())
+        .first()
+    )
+    if not chart:
+        chart = Chart(user_id=current_user.id)
+        db.add(chart)
+
+    chart.chart_data = chart_data
+    chart.svg_content = svg_content
+    chart.sun_sign = sun_sign
+    chart.moon_sign = moon_sign
+    chart.rising_sign = rising_sign
+    chart.status = "ready"
+    chart.created_at = datetime.utcnow()
+
+    db.commit()
+    db.refresh(current_user)
+
+    return {
+        "success": True,
+        "message": "Dados de nascimento atualizados e Bússola calibrada com sucesso!",
+        "user": {
+            "name": current_user.name,
+            "birth_date": current_user.birth_date.isoformat(),
+            "birth_time": current_user.birth_time.strftime("%H:%M") if current_user.birth_time else "12:00",
+            "birth_city": current_user.birth_city,
+            "birth_state": current_user.birth_state,
+            "birth_country": current_user.birth_country,
+            "sun_sign": current_user.sun_sign,
+            "moon_sign": current_user.moon_sign,
+            "rising_sign": current_user.rising_sign,
+        },
+        "has_chart": bool(svg_content),
     }
 
 

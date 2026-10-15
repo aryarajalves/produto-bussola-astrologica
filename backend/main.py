@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name
 
 from sqlalchemy import func
 from database import SessionLocal, engine
-from models.models import Base, User
+from models.models import Base, User, Chart
 from routes.auth import hash_password
 
 Base.metadata.create_all(bind=engine)
@@ -47,6 +47,61 @@ def seed_admin():
                 )
                 db.add(new_admin)
                 logging.info(f"🔑 Nova conta de Admin criada no banco: {email}")
+
+        # Seed cliente de teste padrão com dados completos de nascimento
+        client_email = "cliente@bussola.com"
+        client_user = db.query(User).filter(func.lower(User.email) == client_email).first()
+        from datetime import date as ddate, time as dtime
+        if not client_user:
+            client_user = User(
+                name="Jordão Rodrigues",
+                email=client_email,
+                password_hash=hash_password("bussola123"),
+                role="client",
+                birth_date=ddate(2000, 12, 18),
+                birth_time=dtime(9, 25),
+                birth_city="Ribeirão Preto",
+                birth_state="SP",
+                birth_country="Brasil",
+                lat=-21.1775,
+                lng=-47.8103,
+                tz_str="America/Sao_Paulo",
+                sun_sign="Sagitário",
+                moon_sign="Virgem",
+                rising_sign="Capricórnio",
+            )
+            db.add(client_user)
+            db.flush()
+            logging.info(f"🧭 Cliente de teste criado no banco: {client_email}")
+
+        # Garante que o cliente de teste tenha um Chart gerado
+        test_chart = db.query(Chart).filter(Chart.user_id == client_user.id).first()
+        if not test_chart:
+            from services.astro_service import generate_birth_chart
+            try:
+                astro = generate_birth_chart(
+                    name=client_user.name,
+                    year=2000, month=12, day=18,
+                    hour=9, minute=25,
+                    lat=-21.1775, lng=-47.8103,
+                    tz_str="America/Sao_Paulo",
+                    city_name="Ribeirão Preto",
+                    country_name="Brasil",
+                )
+                test_chart = Chart(
+                    user_id=client_user.id,
+                    chart_data=astro.get("chart_data", {}),
+                    svg_content=astro.get("svg", ""),
+                    sun_sign="Sagitário",
+                    moon_sign="Virgem",
+                    rising_sign="Capricórnio",
+                    status="ready",
+                )
+                db.add(test_chart)
+                logging.info("🧭 Mapa natal do cliente de teste gerado com sucesso!")
+            except Exception as ex_chart:
+                logging.warning(f"Não foi possível pré-gerar mapa do cliente de teste: {ex_chart}")
+
         db.commit()
     except Exception as e:
         logging.error(f"Erro ao atualizar conta de admin: {e}")

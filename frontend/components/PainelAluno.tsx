@@ -19,6 +19,7 @@ import { api } from "@/lib/api";
 import AnaliseDoDia from "@/components/AnaliseDoDia";
 import ChartZoomModal from "@/components/ChartZoomModal";
 import Ajuda from "@/components/Ajuda";
+import ColetaDadosBussola from "@/components/ColetaDadosBussola";
 
 const C = {
   bg: "#0f0b1e",
@@ -32,7 +33,7 @@ const C = {
   border: "rgba(127,119,221,0.2)",
 };
 
-export type AreaAluno = "bussola" | "leitura" | "diario";
+export type AreaAluno = "bussola" | "leitura" | "diario" | "dados";
 
 interface Mapa {
   svg: string;
@@ -97,18 +98,45 @@ export default function PainelAluno({
     ? primeiroNome.charAt(0).toUpperCase() + primeiroNome.slice(1)
     : "";
 
+  // ──────────────────────────────────────────────── Coleta / Meus Dados
+  if (area === "dados") {
+    return (
+      <div className="w-full">
+        <ColetaDadosBussola
+          title="Meus Dados de Nascimento"
+          subtitle="Seus dados calibram o cálculo astronômico das 12 casas e os trânsitos da sua Bússola."
+          onSuccess={() => {
+            carregar();
+            onIrPara("bussola");
+          }}
+          onCancel={() => onIrPara("bussola")}
+        />
+      </div>
+    );
+  }
+
   // ──────────────────────────────────────────────── Minha Bússola
   if (area === "bussola") {
     return (
       <div className="w-full max-w-5xl">
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold" style={{ color: "#ffffff" }}>
-            {nomeExibido ? `A bússola do ${nomeExibido}` : "A sua bússola"}
-          </h2>
-          <p className="text-sm mt-2 leading-relaxed" style={{ color: C.muted }}>
-            Este é o céu do minuto em que você nasceu. Ele não muda nunca, e é
-            contra ele que toda leitura de data é calculada.
-          </p>
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h2 className="text-2xl font-bold" style={{ color: "#ffffff" }}>
+              {nomeExibido ? `A bússola do ${nomeExibido}` : "A sua bússola"}
+            </h2>
+            <p className="text-sm mt-2 leading-relaxed" style={{ color: C.muted }}>
+              Este é o céu do minuto em que você nasceu. Ele não muda nunca, e é
+              contra ele que toda leitura de data é calculada.
+            </p>
+          </div>
+          {mapa?.svg && (
+            <button
+              onClick={() => onIrPara("dados")}
+              className="text-xs px-3.5 py-2 rounded-xl border transition-all text-amber-400 hover:text-amber-300 border-amber-400/30 hover:border-amber-400/60 bg-amber-400/5 hover:bg-amber-400/10 shrink-0 self-start sm:self-auto cursor-pointer"
+            >
+              ⚙️ Editar Meus Dados
+            </button>
+          )}
         </div>
 
         {carregando ? (
@@ -170,18 +198,15 @@ export default function PainelAluno({
             </button>
           </>
         ) : (
-          <div
-            className="p-8 rounded-2xl"
-            style={{ background: C.card, border: `1px solid ${C.border}` }}
-          >
-            <p className="text-base font-semibold" style={{ color: "#ffffff" }}>
-              Seu mapa ainda não foi desenhado
-            </p>
-            <p className="text-sm mt-2 leading-relaxed" style={{ color: C.muted }}>
-              Para calcular qualquer coisa eu preciso de três dados: a data, a
-              hora e a cidade onde você nasceu. A hora é a que mais importa, e é
-              a que mais gente erra.
-            </p>
+          <div className="space-y-6">
+            <ColetaDadosBussola
+              title="Calibre a sua Bússola"
+              subtitle="Para desenhar sua mandala e começar a ler o céu do seu dia a dia, informe seus dados de nascimento abaixo."
+              onSuccess={() => {
+                carregar();
+                onIrPara("bussola");
+              }}
+            />
           </div>
         )}
       </div>
@@ -190,6 +215,33 @@ export default function PainelAluno({
 
   // ──────────────────────────────────────────────── A leitura
   if (area === "leitura") {
+    if (!carregando && !mapa?.svg) {
+      return (
+        <div className="w-full max-w-2xl mx-auto space-y-6">
+          <div
+            className="p-4 rounded-2xl flex items-center gap-3.5"
+            style={{ background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.25)" }}
+          >
+            <span className="text-2xl">🧭</span>
+            <div>
+              <p className="text-sm font-semibold text-zinc-100">Precisamos da sua data e local de nascimento</p>
+              <p className="text-xs text-zinc-400 mt-0.5">
+                A leitura do dia projeta os planetas sobre as suas casas natais. Calibre sua bússola para ver sua análise.
+              </p>
+            </div>
+          </div>
+          <ColetaDadosBussola
+            title="Cadastrar Dados de Nascimento"
+            subtitle="Preencha uma única vez para liberar suas previsões diárias e acompanhamento de trânsitos."
+            onSuccess={() => {
+              carregar();
+              onIrPara("leitura");
+            }}
+          />
+        </div>
+      );
+    }
+
     return (
       <div className="w-full -mx-2">
         <AnaliseDoDia nome={usuario?.name} />

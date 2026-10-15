@@ -62,9 +62,10 @@ export default function AdminPage() {
       const params = new URLSearchParams(window.location.search);
       const tab = params.get("tab");
       if (tab) {
-        if (tab === "leitura" || tab === "analise") setActiveTab("pesquisa");
-        else if (tab === "diario" || tab === "historico") setActiveTab("historico");
-        else if (tab === "home" || tab === "bussola") setActiveTab("home");
+        if (tab === "dados" || tab === "coleta") setActiveTab("dados");
+        else if (tab === "leitura" || tab === "analise") setActiveTab(papel === "admin" ? "leitura" : "pesquisa");
+        else if (tab === "diario") setActiveTab(papel === "admin" ? "diario" : "historico");
+        else if (tab === "bussola") setActiveTab(papel === "admin" ? "bussola" : "home");
         else setActiveTab(tab);
       }
     }
@@ -177,22 +178,40 @@ export default function AdminPage() {
             <p className="text-sm" style={{ color: C.muted }}>Carregando...</p>
           )}
 
-          {papel !== null && papel !== "admin" && (
+          {/* Visão do Aluno / Bússola Pessoal */}
+          {papel !== null && (papel !== "admin" || ["leitura", "bussola", "diario", "dados"].includes(activeTab)) && (
             <PainelAluno
-              area={(activeTab === "pesquisa"
-                ? "leitura"
-                : activeTab === "historico"
-                ? "diario"
-                : "bussola") as AreaAluno}
+              area={(
+                activeTab === "pesquisa" || activeTab === "leitura"
+                  ? "leitura"
+                  : activeTab === "historico" || activeTab === "diario"
+                  ? "diario"
+                  : activeTab === "dados"
+                  ? "dados"
+                  : "bussola"
+              ) as AreaAluno}
               usuario={currentUser}
-              onIrPara={(a) =>
-                setActiveTab(a === "leitura" ? "pesquisa" : a === "diario" ? "historico" : "home")
-              }
+              onIrPara={(a) => {
+                if (papel === "admin") {
+                  setActiveTab(a);
+                } else {
+                  setActiveTab(
+                    a === "leitura"
+                      ? "pesquisa"
+                      : a === "diario"
+                      ? "historico"
+                      : a === "dados"
+                      ? "dados"
+                      : "home"
+                  );
+                }
+              }}
             />
           )}
 
-          {papel === "admin" && (<>
-          {/* Aba Home / Formulário de Coleta de Informações */}
+          {/* Ferramentas Exclusivas de Gestão para Administradores */}
+          {papel === "admin" && !["leitura", "bussola", "diario", "dados"].includes(activeTab) && (<>
+          {/* Aba Home / Cadastrar Mapa */}
           {activeTab === "home" && (
             <div className="w-full">
               <LeadQuestionnaire
