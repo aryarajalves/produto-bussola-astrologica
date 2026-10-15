@@ -15,7 +15,7 @@ from geopy.exc import GeocoderTimedOut, GeocoderServiceError
 
 logger = logging.getLogger(__name__)
 
-_geolocator = Nominatim(user_agent="sirius-academy-astrology/1.0")
+_geolocator = Nominatim(user_agent="bussola-astrologica/1.0")
 _tf = TimezoneFinder()
 
 STATE_NAMES = {
@@ -127,7 +127,7 @@ def search_cities(query: str) -> list[dict]:
                 "featuretype": "city",
                 "accept-language": "pt-BR,pt,en",
             },
-            headers={"User-Agent": "sirius-academy-astrology/1.0"},
+            headers={"User-Agent": "bussola-astrologica/1.0"},
             timeout=10,
         )
         resp.raise_for_status()
@@ -323,7 +323,7 @@ def city_to_coordinates(city: str, state: str = "", country: str = "Brazil") -> 
         resp = requests.get(
             "https://nominatim.openstreetmap.org/search",
             params={"q": query, "format": "json", "limit": 1, "addressdetails": 0},
-            headers={"User-Agent": "sirius-academy-astrology/1.0"},
+            headers={"User-Agent": "bussola-astrologica/1.0"},
             timeout=10,
         )
         resp.raise_for_status()

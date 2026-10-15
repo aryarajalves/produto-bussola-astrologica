@@ -1,5 +1,5 @@
 """
-notebooklm_service.py — Sirius Academy
+notebooklm_service.py — Bússola Astrológica
 Gera podcast via Google NotebookLM usando notebooklm-py.
 
 AUTENTICAÇÃO:

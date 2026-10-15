@@ -32,7 +32,7 @@ export default function GerenciamentoLogs() {
   const terminalRef = useRef<HTMLDivElement>(null);
   const autoRefreshTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const token = typeof window !== "undefined" ? localStorage.getItem("sirius_token") || localStorage.getItem("token") : null;
+  const token = typeof window !== "undefined" ? localStorage.getItem("bussola_token") || localStorage.getItem("sirius_token") || localStorage.getItem("token") : null;
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8005";
 
   // Busca logs da API

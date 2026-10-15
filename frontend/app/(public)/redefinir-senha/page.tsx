@@ -110,7 +110,7 @@ function RedefinirSenhaContent() {
             🧭
           </div>
           <h1 className="text-2xl font-bold tracking-tight" style={{ color: "#f0eeff" }}>
-            Sirius Academy
+            Bússola Astrológica
           </h1>
           <p className="text-xs" style={{ color: "#8b87b8" }}>
             Redefinição Segura de Senha

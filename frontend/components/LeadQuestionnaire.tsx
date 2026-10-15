@@ -27,7 +27,7 @@ interface CreatedLeadResult {
 function getCachedLead() {
   if (typeof window !== "undefined") {
     try {
-      const cached = localStorage.getItem("sirius_saved_lead");
+      const cached = localStorage.getItem("bussola_saved_lead");
       if (cached) return JSON.parse(cached);
     } catch {}
   }
@@ -115,7 +115,7 @@ export default function LeadQuestionnaire({
             setCoords({ lat: loaded.lat, lng: loaded.lng });
           }
           if (typeof window !== "undefined") {
-            localStorage.setItem("sirius_saved_lead", JSON.stringify(loaded));
+            localStorage.setItem("bussola_saved_lead", JSON.stringify(loaded));
           }
         } else if (active && (!res.items || res.items.length === 0)) {
           // Se não há nenhum cliente cadastrado no banco, limpa qualquer resquício do cache
@@ -126,7 +126,7 @@ export default function LeadQuestionnaire({
           setCity("");
           setCoords(null);
           if (typeof window !== "undefined") {
-            localStorage.removeItem("sirius_saved_lead");
+            localStorage.removeItem("bussola_saved_lead");
           }
         }
       } catch {
@@ -215,7 +215,7 @@ export default function LeadQuestionnaire({
         lng: result.lng ?? coords?.lng ?? null,
       };
       if (typeof window !== "undefined") {
-        localStorage.setItem("sirius_saved_lead", JSON.stringify(savedData));
+        localStorage.setItem("bussola_saved_lead", JSON.stringify(savedData));
       }
       setToast({
         type: "success",

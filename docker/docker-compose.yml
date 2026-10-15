@@ -7,7 +7,7 @@ services:
     restart: always
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sirius123}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-bussola123}
       POSTGRES_DB: ${POSTGRES_DB:-bussolaapp_db}
     ports:
       - "5432:5432"
@@ -34,8 +34,8 @@ services:
     env_file:
       - ../backend/.env
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-sirius123}@postgres:5432/${POSTGRES_DB:-bussolaapp_db}
-      - TEST_DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-sirius123}@postgres:5432/bussolaapp_test
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-bussola123}@postgres:5432/${POSTGRES_DB:-bussolaapp_db}
+      - TEST_DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-bussola123}@postgres:5432/bussolaapp_test
       - SUPER_ADMIN_NAME=${SUPER_ADMIN_NAME:-Aryaraj}
       - SUPER_ADMIN_EMAIL=${SUPER_ADMIN_EMAIL:-aryarajmarketing@gmail.com}
       - SUPER_ADMIN_PASSWORD=${SUPER_ADMIN_PASSWORD:-123456}

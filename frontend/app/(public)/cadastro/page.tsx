@@ -132,8 +132,9 @@ function CadastroContent() {
         }
       );
 
-      toast.success("E-mail verificado com sucesso! Bem-vindo(a) à Sirius Academy.");
+      toast.success("E-mail verificado com sucesso! Bem-vindo(a) à Bússola Astrológica.");
       if (typeof window !== "undefined" && data.token) {
+        localStorage.setItem("bussola_token", data.token);
         localStorage.setItem("sirius_token", data.token);
       }
 

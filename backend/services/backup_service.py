@@ -81,7 +81,7 @@ def test_b2_connection():
 
 def get_db_connection_params():
     """Extrai os parâmetros de conexão do banco a partir de DATABASE_URL."""
-    db_url = os.getenv("DATABASE_URL", "postgresql://postgres:sirius123@localhost:5432/sirius_academy")
+    db_url = os.getenv("DATABASE_URL", "postgresql://postgres:bussola123@localhost:5432/bussolaapp_db")
     if db_url.startswith("postgres://"):
         db_url = db_url.replace("postgres://", "postgresql://", 1)
 
@@ -94,10 +94,10 @@ def get_db_connection_params():
     parsed = urlparse(db_url)
     return {
         "user": parsed.username or "postgres",
-        "password": parsed.password or "sirius123",
+        "password": parsed.password or "bussola123",
         "host": parsed.hostname or "postgres",
         "port": str(parsed.port or 5432),
-        "dbname": (parsed.path or "/sirius_academy").lstrip("/"),
+        "dbname": (parsed.path or "/bussolaapp_db").lstrip("/"),
     }
 
 

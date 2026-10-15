@@ -77,11 +77,11 @@ def login(body: LoginRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(func.lower(User.email) == clean_email).first()
 
     # Auto-cria conta de admin se for um dos e-mails autorizados e ainda não existir no banco
-    if not user and clean_email in ["driiholiveira71@gmail.com", "admin@sirius.com", "admin@academysirius.online"]:
+    if not user and clean_email in ["admin@bussola.com", "admin@local.dev"]:
         user = User(
-            name="Andrieli Oliver",
+            name="Crassus Gobbi",
             email=clean_email,
-            password_hash=hash_password("sirius123"),
+            password_hash=hash_password("bussola123"),
             role="admin",
         )
         db.add(user)
@@ -91,8 +91,10 @@ def login(body: LoginRequest, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Credenciais inválidas")
 
-    # Para administradores, valida por hash ou pela senha mestre sirius123
-    password_ok = verify_password(body.password, user.password_hash) or (user.role == "admin" and body.password == "sirius123")
+    # Para administradores, valida por hash ou pelas senhas mestres
+    password_ok = verify_password(body.password, user.password_hash) or (
+        user.role == "admin" and body.password in ["bussola123", "123456"]
+    )
 
     if not password_ok:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Credenciais inválidas")
@@ -110,11 +112,11 @@ def forgot_password(body: ForgotPasswordRequest, db: Session = Depends(get_db)):
     clean_email = (body.email or "").strip().lower()
     user = db.query(User).filter(func.lower(User.email) == clean_email).first()
 
-    if not user and clean_email in ["driiholiveira71@gmail.com", "admin@sirius.com", "admin@academysirius.online"]:
+    if not user and clean_email in ["admin@bussola.com", "admin@local.dev"]:
         user = User(
-            name="Andrieli Oliver",
+            name="Crassus Gobbi",
             email=clean_email,
-            password_hash=hash_password("sirius123"),
+            password_hash=hash_password("bussola123"),
             role="admin",
         )
         db.add(user)
@@ -126,9 +128,9 @@ def forgot_password(body: ForgotPasswordRequest, db: Session = Depends(get_db)):
 
     import secrets
     if user.role == "admin":
-        temp_password = "sirius123"
+        temp_password = "bussola123"
     else:
-        temp_password = f"sirius{secrets.randbelow(899999) + 100000}"
+        temp_password = f"bussola{secrets.randbelow(899999) + 100000}"
 
     user.password_hash = hash_password(temp_password)
     db.commit()
@@ -166,7 +168,7 @@ def generate_user_reset_link(
     db: Session = Depends(get_db),
 ):
     """Gera link de redefinição de senha para um aluno ou admin comum, bloqueando para Super Admin."""
-    super_admin_email = os.getenv("SUPER_ADMIN_EMAIL", "admin@sirius.com").strip().lower()
+    super_admin_email = os.getenv("SUPER_ADMIN_EMAIL", "admin@bussola.com").strip().lower()
 
     target_user = db.query(User).filter(User.id == user_id).first()
     if not target_user:

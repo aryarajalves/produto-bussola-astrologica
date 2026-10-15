@@ -380,13 +380,13 @@ export default function ClientDrawer({
                       pass = res.new_password;
                       setResendResult({ password: res.new_password, email: res.email });
                     } catch {
-                      pass = "sirius123";
+                      pass = "bussola123";
                     } finally {
                       setResendLoading(false);
                     }
                   }
 
-                  const text = `✨ Olá, ${client.name}! Aqui é a Andrieli Oliver da Bussola Astrologica.\n\nSeu Mapa da Alma está pronto! 🔮\n\n🔐 Seus dados de acesso:\n• Link: https://academysirius.online/login\n• E-mail: ${client.email}\n• Senha: ${pass}\n\nAcesse agora para ler a sua carta sagrada! 🌟`;
+                  const text = `🧭 Olá, ${client.name}! Aqui é o Crassus Gobbi da Bússola Astrológica.\n\nSua Bússola Astrológica e leitura tática estão prontas!\n\n🔐 Seus dados de acesso:\n• Link: https://bussolaastrologica.com.br/login\n• E-mail: ${client.email}\n• Senha: ${pass}\n\nAcesse agora para conferir as forças ativas do seu dia e seu mapa! 🧭`;
                   const formattedPhone = phone.startsWith("55") ? phone : `55${phone}`;
                   window.open(`https://wa.me/${formattedPhone}?text=${encodeURIComponent(text)}`, "_blank");
                 }}

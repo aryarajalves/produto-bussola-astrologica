@@ -46,7 +46,7 @@ export default function GestaoUsuarios() {
       try {
         const urlParams = new URLSearchParams(window.location.search);
         const urlSub = urlParams.get("subtab");
-        const savedSub = localStorage.getItem("sirius_gestao_subtab");
+        const savedSub = localStorage.getItem("bussola_gestao_subtab");
         const initial = urlSub || savedSub;
         if (initial === "usuarios" || initial === "convites") {
           return initial;
@@ -60,7 +60,7 @@ export default function GestaoUsuarios() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
-      localStorage.setItem("sirius_gestao_subtab", activeTab);
+      localStorage.setItem("bussola_gestao_subtab", activeTab);
       const url = new URL(window.location.href);
       if (url.searchParams.get("subtab") !== activeTab) {
         url.searchParams.set("subtab", activeTab);

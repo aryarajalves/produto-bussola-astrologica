@@ -352,7 +352,7 @@ export default function Funil() {
     <div className="text-center py-16">
       <div className="text-6xl mb-8 animate-pulse inline-block">🌌</div>
       <p className="text-xl font-semibold mb-3" style={{ color: C.light }}>
-        Andrieli está lendo o seu mapa...
+        Crassus está lendo a sua bússola...
       </p>
       <p className="text-sm mb-6" style={{ color: C.muted }}>
         Estamos gerando sua leitura personalizada com base no céu do momento do seu nascimento.
@@ -426,7 +426,7 @@ export default function Funil() {
       <Input value={form.name} onChange={set("name")} placeholder="Digite seu nome completo" />
       <Note>Use o nome como está no seu documento de identidade</Note>
       <p className="mt-8 text-sm italic text-center" style={{ color: C.muted }}>
-        "Cada resposta sua me ajuda a ler seu Mapa de forma mais profunda e personalizada." — Andrieli
+        "Cada resposta sua calibra a sua Bússola de forma mais precisa e tática." — Crassus
       </p>
       <div className="flex justify-between mt-8">
         <Btn onClick={back} variant="ghost">Voltar</Btn>

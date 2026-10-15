@@ -36,7 +36,7 @@ export default function AdminPage() {
   }, []);
 
   useEffect(() => {
-    const token = typeof window !== "undefined" ? localStorage.getItem("sirius_token") : null;
+    const token = typeof window !== "undefined" ? (localStorage.getItem("bussola_token") || localStorage.getItem("sirius_token")) : null;
     if (!token) {
       router.push("/admin/login");
       return;
@@ -105,6 +105,7 @@ export default function AdminPage() {
 
   const confirmLogout = () => {
     setShowLogoutModal(false);
+    localStorage.removeItem("bussola_token");
     localStorage.removeItem("sirius_token");
     router.push("/admin/login");
   };

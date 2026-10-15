@@ -50,8 +50,7 @@ export default function LoginPage() {
 
       saveToken(res.token);
       
-      // Uma plataforma só: os dois papéis caem no painel, que se monta
-      // conforme quem entrou. O /dashboard antigo era da Sirius.
+      // Redireciona diretamente para o painel unificado da Bússola Astrológica
       router.push("/admin");
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Credenciais inválidas. Tente novamente.");

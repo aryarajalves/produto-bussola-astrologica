@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from models.models import User, Chart, ChartSection, GenerationLog
 
-logger = logging.getLogger("sirius")
+logger = logging.getLogger("bussola")
 
 
 def resolve_client_user(client_id: str, db: Session) -> Optional[User]:

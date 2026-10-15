@@ -1,6 +1,6 @@
 """
-pdf_service.py  —  Mapa da Alma  |  Luxury Edition
-Sirius Academy  |  dark cosmos theme, sacred geometry, custom fonts
+pdf_service.py  —  Bússola Astrológica  |  Edição Tática Editorial
+Bússola Astrológica  |  dark tactical theme, sacred geometry, custom fonts
 """
 import io
 import re
@@ -427,10 +427,10 @@ def _make_cover(name, sun_sign, moon_sign, rising_sign, birth_date, birth_city, 
 
         cv.setFont(F("Poppins-Light"), 8)
         cv.setFillColor(LIGHT)
-        cv.drawCentredString(cx, H - 1.4 * cm, "S I R I U S   A C A D E M Y")
+        cv.drawCentredString(cx, H - 1.4 * cm, "B Ú S S O L A   A S T R O L Ó G I C A")
         cv.setFont(F("Poppins"), 7)
         cv.setFillColor(MUTED)
-        cv.drawCentredString(cx, H - 2.0 * cm, "por Andrieli Oliver")
+        cv.drawCentredString(cx, H - 2.0 * cm, "por Crassus Gobbi")
 
         # ── Central decorative zone ───────────────────────────
         mid_y = H * 0.54
@@ -534,7 +534,7 @@ def _make_cover(name, sun_sign, moon_sign, rising_sign, birth_date, birth_city, 
         cv.drawCentredString(cx, 0.85 * cm,
                              "Este material e exclusivo e intransferivel")
         cv.drawCentredString(cx, 0.35 * cm,
-                             "Sirius Academy  |  siriusacademy.com.br")
+                             "Bússola Astrológica  |  bussolaastrologica.com.br")
 
         cv.restoreState()
 
@@ -561,7 +561,7 @@ def _on_content_page(cv, doc):
 
     cv.setFont(F("Poppins-Light"), 7)
     cv.setFillColor(MUTED)
-    cv.drawString(2.5 * cm, 0.55 * cm, "Sirius Academy  —  Mapa da Alma")
+    cv.drawString(2.5 * cm, 0.55 * cm, "Bússola Astrológica  —  Navegação Tática")
     cv.drawRightString(W - 2.5 * cm, 0.55 * cm, f"{doc.page}")
 
     cv.restoreState()
@@ -1181,7 +1181,7 @@ def generate_pdf(
         topMargin=2.5 * cm,
         bottomMargin=2.0 * cm,
         title=f"Mapa da Alma — {name}",
-        author="Sirius Academy",
+        author="Bússola Astrológica",
         subject="Leitura Astrologica Personalizada",
     )
 

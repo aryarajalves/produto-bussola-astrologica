@@ -1,5 +1,5 @@
 """
-podcast_service.py — Sirius Academy
+podcast_service.py — Bússola Astrológica
 Gera podcast de 2 narradores sobre o Mapa da Alma via OpenAI GPT + TTS.
 """
 import os

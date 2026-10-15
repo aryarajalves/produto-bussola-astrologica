@@ -160,7 +160,7 @@ async def submit_funnel(body: FunnelSubmit, db: Session = Depends(get_db)):
         )
 
     import random
-    password = f"sirius{random.randint(100000, 999999)}"
+    password = f"bussola{random.randint(100000, 999999)}"
     
     if existing_user:
         # Usuário já cadastrado — atualiza os dados de nascimento, mantém o role (inclusive admin) e gera um novo mapa

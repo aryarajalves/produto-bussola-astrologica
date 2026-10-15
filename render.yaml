@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: sirius-academy-api
+    name: bussola-astrologica-api
     runtime: python
     rootDir: backend
     buildCommand: pip install --upgrade pip && pip install --prefer-binary -r requirements.txt

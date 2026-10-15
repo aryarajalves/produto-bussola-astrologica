@@ -3,14 +3,14 @@ export function getBaseUrl(): string {
     return process.env.NEXT_PUBLIC_API_URL;
   }
   if (typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
-    return "https://sirius-academy-api.onrender.com";
+    return "https://bussola-astrologica-api.onrender.com";
   }
   return process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 }
 
 function getToken(): string | null {
   if (typeof window === "undefined") return null;
-  return localStorage.getItem("sirius_token");
+  return localStorage.getItem("bussola_token") || localStorage.getItem("sirius_token");
 }
 
 async function request<T>(
@@ -103,9 +103,15 @@ export const api = {
 };
 
 export function saveToken(token: string) {
-  localStorage.setItem("sirius_token", token);
+  if (typeof window !== "undefined") {
+    localStorage.setItem("bussola_token", token);
+    localStorage.setItem("sirius_token", token);
+  }
 }
 
 export function clearToken() {
-  localStorage.removeItem("sirius_token");
+  if (typeof window !== "undefined") {
+    localStorage.removeItem("bussola_token");
+    localStorage.removeItem("sirius_token");
+  }
 }

@@ -228,7 +228,7 @@ def list_panel_users(
 ):
     """Lista todos os usuários do sistema identificando super administradores."""
     import os
-    super_admin_email = os.getenv("SUPER_ADMIN_EMAIL", "admin@sirius.com").strip().lower()
+    super_admin_email = os.getenv("SUPER_ADMIN_EMAIL", "admin@bussola.com").strip().lower()
 
     q = db.query(User)
     if role:
@@ -273,7 +273,7 @@ def update_panel_user(
 ):
     """Atualiza as informações de um usuário do painel, impedindo edição do Super Admin."""
     import os
-    super_admin_email = os.getenv("SUPER_ADMIN_EMAIL", "admin@sirius.com").strip().lower()
+    super_admin_email = os.getenv("SUPER_ADMIN_EMAIL", "admin@bussola.com").strip().lower()
 
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
@@ -341,7 +341,7 @@ def delete_panel_users_batch(
         )
 
     import os
-    super_admin_email = os.getenv("SUPER_ADMIN_EMAIL", "admin@sirius.com").strip().lower()
+    super_admin_email = os.getenv("SUPER_ADMIN_EMAIL", "admin@bussola.com").strip().lower()
 
     super_admin_protected = False
     deleted_count = 0
@@ -638,7 +638,7 @@ async def resend_access(
     if user.role == "admin":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Não é possível alterar senha de admin.")
 
-    new_password = f"sirius{random.randint(100000, 999999)}"
+    new_password = f"bussola{random.randint(100000, 999999)}"
     user.password_hash = hash_password(new_password)
     db.commit()
 
@@ -702,7 +702,7 @@ async def update_email(
 
     old_email = user.email
     import random
-    new_password = f"sirius{random.randint(100000, 999999)}"
+    new_password = f"bussola{random.randint(100000, 999999)}"
 
     user.email = body.email
     user.password_hash = hash_password(new_password)

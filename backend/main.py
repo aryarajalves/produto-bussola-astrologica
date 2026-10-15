@@ -28,8 +28,8 @@ def seed_admin():
 
         admin_configs = [
             (super_email, super_pass, super_name),
-            ("driiholiveira71@gmail.com", "sirius123", "Andrieli Oliver"),
-            ("admin@sirius.com", "sirius123", "Andrieli Oliver"),
+            ("admin@bussola.com", "bussola123", "Crassus Gobbi"),
+            ("admin@local.dev", "admin123", "Admin Bússola"),
         ]
 
         for email, pwd, name in admin_configs:
@@ -55,15 +55,15 @@ def seed_admin():
 
 seed_admin()
 
-app = FastAPI(title="Sirius Academy API", version="1.0.0")
+app = FastAPI(title="Bússola Astrológica API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         # Produção
-        "https://sirius-academyy.vercel.app",
-        "https://academysirius.online",
-        "https://www.academysirius.online",
+        "https://bussolaastrologica.com.br",
+        "https://www.bussolaastrologica.com.br",
+        "https://bussola-astrologica.vercel.app",
         "https://resonant-hummingbird-3ae859.netlify.app",
         # Desenvolvimento local
         "http://localhost:3000",
@@ -89,4 +89,4 @@ app.include_router(invites.router)
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "service": "Sirius Academy API"}
+    return {"status": "ok", "service": "Bússola Astrológica API"}

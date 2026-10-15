@@ -26,7 +26,7 @@ export default function AdminSidebar({
       setUser(currentUser);
       return;
     }
-    const token = typeof window !== "undefined" ? localStorage.getItem("sirius_token") : null;
+    const token = typeof window !== "undefined" ? (localStorage.getItem("bussola_token") || localStorage.getItem("sirius_token")) : null;
     if (!token) return;
 
     api.get<{ name: string; email: string }>("/auth/me")
@@ -185,10 +185,10 @@ export default function AdminSidebar({
           <span className="text-xl leading-none mt-0.5 text-amber-400">✨</span>
           <div>
             <h2 className="font-bold text-base leading-tight tracking-wide text-indigo-100">
-              Bussola Astrologica
+              Bússola Astrológica
             </h2>
             <p className="text-xs text-indigo-300/60 font-normal mt-0.5">
-              {aluno ? "A sua bússola" : "Painel de Gestão Cósmica"}
+              {aluno ? "A sua bússola" : "Painel de Gestão"}
             </p>
           </div>
         </div>

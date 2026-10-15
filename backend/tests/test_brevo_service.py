@@ -7,7 +7,7 @@ def test_html_verification_code_contains_code_and_name():
     html = _html_verification_code("Aryaraj Alves", "847291")
     assert "Aryaraj" in html
     assert "847291" in html
-    assert "Sirius Academy" in html
+    assert "Bússola Astrológica" in html
     assert "15 minutos" in html
 
 
@@ -24,7 +24,7 @@ def test_send_brevo_code_success(mock_post):
     mock_post.return_value = mock_response
 
     with patch.dict(os.environ, {"BREVO_API_KEY": "xkeysib-mock-key"}):
-        result = send_brevo_verification_code("aluno@sirius.com", "Andrieli Oliver", "654321")
+        result = send_brevo_verification_code("cliente@bussola.com", "Crassus Gobbi", "654321")
         assert result is True
         assert mock_post.called
         args, kwargs = mock_post.call_args
