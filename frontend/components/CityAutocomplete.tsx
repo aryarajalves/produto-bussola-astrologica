@@ -13,6 +13,10 @@ interface CityAutocompleteProps {
   onChangeCity: (text: string) => void;
   onAutoCoordsResolved?: (lat: number, lng: number) => void;
   inputStyle?: React.CSSProperties;
+  inputClassName?: string;
+  hideLabel?: boolean;
+  hideBadge?: boolean;
+  placeholder?: string;
 }
 
 export default function CityAutocomplete({
@@ -24,6 +28,10 @@ export default function CityAutocomplete({
   onChangeCity,
   onAutoCoordsResolved,
   inputStyle,
+  inputClassName,
+  hideLabel = false,
+  hideBadge = false,
+  placeholder = "Ex: Fortaleza, Campinas, etc.",
 }: CityAutocompleteProps) {
   const [cityResults, setCityResults] = useState<CityOption[]>([]);
   const [cityDropdown, setCityDropdown] = useState(false);
@@ -72,22 +80,32 @@ export default function CityAutocomplete({
   }, [city, state, coords, onAutoCoordsResolved]);
 
   return (
-    <div className="pt-2 relative">
-      <label className="text-xs font-medium block mb-1" style={{ color: "#8b87b8" }}>
-        Cidade de Nascimento <span className="text-[10px] text-zinc-400">(Digite para escolher no dropdown e definir coordenadas)</span>
-      </label>
-      <div className="relative">
+    <div className={hideLabel ? "relative w-full" : "pt-2 relative w-full"}>
+      {!hideLabel && (
+        <label className="text-xs font-medium block mb-1 text-zinc-400">
+          Cidade de Nascimento{" "}
+          <span className="text-[10px] text-zinc-500">
+            (Digite para escolher no dropdown e definir coordenadas)
+          </span>
+        </label>
+      )}
+      <div className="relative w-full">
         <input
           type="text"
-          placeholder="Ex: Fortaleza, Campinas, etc."
+          placeholder={placeholder}
           value={city}
           onChange={(e) => handleInputChange(e.target.value)}
           onFocus={() => { if (cityResults.length > 0) setCityDropdown(true); }}
           autoComplete="off"
+          className={
+            inputClassName ||
+            "w-full bg-[#18181b] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-[#d4af37]/60 transition-colors"
+          }
           style={inputStyle}
         />
         {cityLoading && (
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs" style={{ color: "#8b87b8" }}>
+          <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[11px] font-mono text-[#d4af37]/80 flex items-center gap-1.5 pointer-events-none">
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#d4af37] animate-ping" />
             buscando...
           </span>
         )}
@@ -97,12 +115,7 @@ export default function CityAutocomplete({
       {cityDropdown && cityResults.length > 0 && (
         <div
           data-testid="city-dropdown"
-          className="absolute left-0 right-0 z-50 mt-1 max-h-52 overflow-y-auto rounded-xl"
-          style={{
-            background: "#1a1535",
-            border: "1px solid rgba(127, 119, 221, 0.4)",
-            boxShadow: "0 10px 30px rgba(0,0,0,0.7)",
-          }}
+          className="absolute left-0 right-0 z-50 mt-1.5 max-h-56 overflow-y-auto rounded-xl bg-[#141418] border border-white/15 shadow-[0_15px_35px_rgba(0,0,0,0.85)] backdrop-blur-md divide-y divide-white/[0.06]"
         >
           {cityResults.map((item, idx) => (
             <button
@@ -113,21 +126,20 @@ export default function CityAutocomplete({
                 setCityDropdown(false);
                 setCityResults([]);
               }}
-              className="w-full text-left px-3.5 py-2.5 flex items-center justify-between gap-3 hover:bg-white/10 transition-all cursor-pointer"
-              style={{ borderBottom: idx < cityResults.length - 1 ? "1px solid rgba(127, 119, 221, 0.15)" : "none" }}
+              className="w-full text-left px-3.5 py-2.5 flex items-center justify-between gap-3 hover:bg-white/[0.06] transition-colors cursor-pointer group"
             >
-              <div className="flex items-center gap-2">
-                <span className="text-base">{item.flag || "📍"}</span>
-                <div>
-                  <p className="text-xs sm:text-sm font-medium" style={{ color: "#f0eeff" }}>
+              <div className="flex items-center gap-2.5 min-w-0">
+                <span className="text-base shrink-0">{item.flag || "📍"}</span>
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm font-medium text-zinc-100 group-hover:text-white truncate">
                     {item.city}{item.state ? `, ${item.state}` : ""}
                   </p>
-                  <p className="text-[10px]" style={{ color: "#8b87b8" }}>
-                    {item.country} {item.tz_str ? `• 🕐 ${item.tz_str}` : ""}
+                  <p className="text-[10px] text-zinc-400">
+                    {item.country} {item.tz_str ? `• ${item.tz_str}` : ""}
                   </p>
                 </div>
               </div>
-              <div className="text-right text-[11px] font-mono shrink-0" style={{ color: "#EF9F27" }}>
+              <div className="text-right text-[11px] font-mono shrink-0 text-[#d4af37]">
                 {item.lat?.toFixed(2)}°, {item.lng?.toFixed(2)}°
               </div>
             </button>
@@ -135,16 +147,11 @@ export default function CityAutocomplete({
         </div>
       )}
 
-      {/* Badge de Latitude e Longitude */}
-      {coords && coords.lat != null && coords.lng != null && (
+      {/* Badge de Latitude e Longitude (opcional se não ocultado) */}
+      {!hideBadge && coords && coords.lat != null && coords.lng != null && (
         <div
           data-testid="lead-coordinates"
-          className="mt-2.5 px-3.5 py-2 rounded-xl text-xs flex items-center justify-between gap-2"
-          style={{
-            background: "rgba(127, 119, 221, 0.15)",
-            border: "1px solid rgba(127, 119, 221, 0.35)",
-            color: "#c4b5fd",
-          }}
+          className="mt-2.5 px-3.5 py-2 rounded-xl text-xs flex items-center justify-between gap-2 bg-[#d4af37]/[0.08] border border-[#d4af37]/25 text-[#f5e6a3]"
         >
           <div className="flex items-center gap-2">
             <span>📍</span>
@@ -152,10 +159,7 @@ export default function CityAutocomplete({
               <strong>Latitude:</strong> {coords.lat} &nbsp;|&nbsp; <strong>Longitude:</strong> {coords.lng}
             </span>
           </div>
-          <span
-            className="text-[10px] font-bold px-2 py-0.5 rounded"
-            style={{ background: "rgba(52, 211, 153, 0.15)", color: "#34d399", border: "1px solid rgba(52, 211, 153, 0.3)" }}
-          >
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
             ✓ Definidas
           </span>
         </div>

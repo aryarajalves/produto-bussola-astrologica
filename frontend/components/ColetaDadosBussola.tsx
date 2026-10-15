@@ -153,18 +153,18 @@ export default function ColetaDadosBussola({
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto bg-[#121215] border border-white/10 rounded-2xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
-      {/* Detalhe de iluminação no topo */}
-      <div className="absolute top-0 left-1/4 right-1/4 h-[1px] bg-gradient-to-r from-transparent via-[#d4af37]/40 to-transparent" />
+    <div className="w-full max-w-2xl mx-auto bg-[#0f0f13] border border-white/[0.09] rounded-2xl p-6 sm:p-8 shadow-[0_30px_70px_-10px_rgba(0,0,0,0.85)] relative overflow-hidden backdrop-blur-sm">
+      {/* Luz ambiente dourada suave no topo */}
+      <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-48 bg-[#d4af37]/[0.08] blur-3xl pointer-events-none rounded-full" />
+      {/* Filete de iluminação dourado na borda superior */}
+      <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-[#d4af37]/50 to-transparent" />
 
       {/* Cabeçalho */}
-      <div className="mb-6 flex items-start justify-between gap-4">
+      <div className="relative mb-6 flex items-start justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1.5">
-            <span className="text-sm text-[#d4af37]">🧭</span>
-            <span className="text-[11px] font-mono uppercase tracking-widest text-[#d4af37]">
-              Coleta de Informações
-            </span>
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#d4af37]/[0.08] border border-[#d4af37]/25 text-[#d4af37] text-[10px] font-mono tracking-widest uppercase mb-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#d4af37] animate-pulse" />
+            Calibração da Bússola
           </div>
           <h2 className="text-xl sm:text-2xl font-bold text-zinc-100 tracking-tight">
             {title}
@@ -177,7 +177,7 @@ export default function ColetaDadosBussola({
           <button
             type="button"
             onClick={onCancel}
-            className="text-zinc-500 hover:text-zinc-300 text-xs px-2.5 py-1.5 rounded-lg border border-white/5 hover:border-white/10 transition-colors"
+            className="text-zinc-400 hover:text-zinc-100 text-xs px-3 py-1.5 rounded-xl border border-white/10 hover:border-white/20 bg-white/[0.02] hover:bg-white/[0.06] transition-all cursor-pointer"
           >
             Fechar
           </button>
@@ -198,42 +198,45 @@ export default function ColetaDadosBussola({
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form onSubmit={handleSubmit} className="space-y-5 relative">
         {/* Campo 1: Nome Completo */}
         <div>
-          <label className="block text-[11px] font-mono uppercase tracking-wider text-zinc-400 mb-1.5">
-            1. Nome Completo
+          <label className="block text-xs font-medium text-zinc-300 mb-1.5">
+            <span className="text-[#d4af37]/80 font-mono text-[11px] mr-1.5">01.</span>
+            Nome Completo
           </label>
           <input
             type="text"
             value={nome}
             onChange={(e) => setNome(e.target.value)}
             placeholder="Como você prefere ser chamado(a)"
-            className="w-full bg-[#18181b] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-[#d4af37]/60 transition-colors"
+            className="w-full h-11 bg-[#141418] border border-white/10 rounded-xl px-4 text-xs sm:text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-[#d4af37]/70 focus:ring-1 focus:ring-[#d4af37]/30 transition-all"
           />
         </div>
 
         {/* Linha 2: Data e Hora de Nascimento */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-[11px] font-mono uppercase tracking-wider text-zinc-400 mb-1.5">
-              2. Data de Nascimento <span className="text-[#d4af37]">*</span>
+            <label className="block text-xs font-medium text-zinc-300 mb-1.5">
+              <span className="text-[#d4af37]/80 font-mono text-[11px] mr-1.5">02.</span>
+              Data de Nascimento <span className="text-[#d4af37]">*</span>
             </label>
             <input
               type="date"
               value={dataNascimento}
               onChange={(e) => setDataNascimento(e.target.value)}
               required
-              className="w-full bg-[#18181b] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-[#d4af37]/60 transition-colors [color-scheme:dark]"
+              className="w-full h-11 bg-[#141418] border border-white/10 rounded-xl px-4 text-xs sm:text-sm text-zinc-100 focus:outline-none focus:border-[#d4af37]/70 focus:ring-1 focus:ring-[#d4af37]/30 transition-all [color-scheme:dark]"
             />
           </div>
 
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="text-[11px] font-mono uppercase tracking-wider text-zinc-400">
-                3. Hora de Nascimento
+              <label className="text-xs font-medium text-zinc-300">
+                <span className="text-[#d4af37]/80 font-mono text-[11px] mr-1.5">03.</span>
+                Hora de Nascimento
               </label>
-              <label className="flex items-center gap-1.5 text-[10px] text-zinc-400 cursor-pointer select-none">
+              <label className="flex items-center gap-1.5 text-[11px] text-zinc-400 hover:text-zinc-300 cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={horaDesconhecida}
@@ -241,7 +244,7 @@ export default function ColetaDadosBussola({
                     setHoraDesconhecida(e.target.checked);
                     if (e.target.checked) setHoraNascimento("12:00");
                   }}
-                  className="rounded border-zinc-700 bg-zinc-800 text-[#d4af37] focus:ring-0"
+                  className="rounded border-zinc-700 bg-zinc-800 text-[#d4af37] focus:ring-0 cursor-pointer"
                 />
                 Não sei a hora exata
               </label>
@@ -251,7 +254,7 @@ export default function ColetaDadosBussola({
               value={horaNascimento}
               onChange={(e) => setHoraNascimento(e.target.value)}
               disabled={horaDesconhecida}
-              className={`w-full bg-[#18181b] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-[#d4af37]/60 transition-colors [color-scheme:dark] ${
+              className={`w-full h-11 bg-[#141418] border border-white/10 rounded-xl px-4 text-xs sm:text-sm text-zinc-100 focus:outline-none focus:border-[#d4af37]/70 focus:ring-1 focus:ring-[#d4af37]/30 transition-all [color-scheme:dark] ${
                 horaDesconhecida ? "opacity-50 cursor-not-allowed" : ""
               }`}
             />
@@ -264,59 +267,70 @@ export default function ColetaDadosBussola({
         </div>
 
         {/* Linha 3: Local de Nascimento */}
-        <div className="space-y-3 pt-1">
-          <label className="block text-[11px] font-mono uppercase tracking-wider text-zinc-400">
-            4. Local de Nascimento <span className="text-[#d4af37]">*</span>
+        <div className="space-y-2 pt-1">
+          <label className="block text-xs font-medium text-zinc-300">
+            <span className="text-[#d4af37]/80 font-mono text-[11px] mr-1.5">04.</span>
+            Local de Nascimento <span className="text-[#d4af37]">*</span>
           </label>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
             {/* País */}
-            <div>
-              <label className="block text-[10px] text-zinc-500 mb-1">País</label>
-              <select
-                value={pais}
-                onChange={(e) => {
-                  setPais(e.target.value);
-                  setEstado("");
-                  setCidade("");
-                  setCoords(null);
-                }}
-                className="w-full bg-[#18181b] border border-white/10 rounded-xl px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-[#d4af37]/60"
-              >
-                {COUNTRIES.map((c) => (
-                  <option key={c.code} value={c.name} className="bg-zinc-900 text-zinc-200">
-                    {c.flag} {c.name}
-                  </option>
-                ))}
-              </select>
+            <div className="sm:col-span-4">
+              <label className="block text-[11px] text-zinc-400 mb-1">País</label>
+              <div className="relative">
+                <select
+                  value={pais}
+                  onChange={(e) => {
+                    setPais(e.target.value);
+                    setEstado("");
+                    setCidade("");
+                    setCoords(null);
+                  }}
+                  className="w-full h-11 bg-[#141418] border border-white/10 rounded-xl px-3.5 pr-8 text-xs text-zinc-100 focus:outline-none focus:border-[#d4af37]/70 focus:ring-1 focus:ring-[#d4af37]/30 transition-all appearance-none cursor-pointer"
+                >
+                  {COUNTRIES.map((c) => (
+                    <option key={c.code} value={c.name} className="bg-zinc-900 text-zinc-200">
+                      {c.flag} {c.name}
+                    </option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-zinc-500 text-[10px]">
+                  ▼
+                </div>
+              </div>
             </div>
 
             {/* Estado (se Brasil) */}
             {isBrazil && (
-              <div>
-                <label className="block text-[10px] text-zinc-500 mb-1">Estado</label>
-                <select
-                  value={estado}
-                  onChange={(e) => {
-                    setEstado(e.target.value);
-                    setCidade("");
-                    setCoords(null);
-                  }}
-                  className="w-full bg-[#18181b] border border-white/10 rounded-xl px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-[#d4af37]/60"
-                >
-                  <option value="">Selecione o estado</option>
-                  {BRAZIL_STATES.map((st) => (
-                    <option key={st.uf} value={st.uf} className="bg-zinc-900 text-zinc-200">
-                      {st.uf} - {st.name}
-                    </option>
-                  ))}
-                </select>
+              <div className="sm:col-span-3">
+                <label className="block text-[11px] text-zinc-400 mb-1">Estado</label>
+                <div className="relative">
+                  <select
+                    value={estado}
+                    onChange={(e) => {
+                      setEstado(e.target.value);
+                      setCidade("");
+                      setCoords(null);
+                    }}
+                    className="w-full h-11 bg-[#141418] border border-white/10 rounded-xl px-3 pr-7 text-xs text-zinc-100 focus:outline-none focus:border-[#d4af37]/70 focus:ring-1 focus:ring-[#d4af37]/30 transition-all appearance-none cursor-pointer"
+                  >
+                    <option value="">UF</option>
+                    {BRAZIL_STATES.map((st) => (
+                      <option key={st.uf} value={st.uf} className="bg-zinc-900 text-zinc-200">
+                        {st.uf} - {st.name}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-zinc-500 text-[10px]">
+                    ▼
+                  </div>
+                </div>
               </div>
             )}
 
             {/* Cidade com Autocomplete */}
-            <div className={isBrazil ? "sm:col-span-1" : "sm:col-span-2"}>
-              <label className="block text-[10px] text-zinc-500 mb-1">Cidade</label>
+            <div className={isBrazil ? "sm:col-span-5" : "sm:col-span-8"}>
+              <label className="block text-[11px] text-zinc-400 mb-1">Cidade</label>
               <CityAutocomplete
                 city={cidade}
                 coords={coords}
@@ -327,23 +341,22 @@ export default function ColetaDadosBussola({
                   setCidade(val);
                   setCoords(null);
                 }}
-                inputStyle={{
-                  backgroundColor: "#18181b",
-                  borderColor: "rgba(255,255,255,0.1)",
-                  borderRadius: "0.75rem",
-                  padding: "0.5rem 0.75rem",
-                  fontSize: "0.75rem",
-                  color: "#f4f4f5",
-                }}
+                hideLabel={true}
+                hideBadge={true}
+                placeholder="Ex: Ribeirão Preto, São Paulo..."
+                inputClassName="w-full h-11 bg-[#141418] border border-white/10 rounded-xl px-3.5 text-xs text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-[#d4af37]/70 focus:ring-1 focus:ring-[#d4af37]/30 transition-all"
               />
             </div>
           </div>
 
           {coords && coords.lat && coords.lng && (
-            <div className="flex items-center gap-2 text-[10px] font-mono text-[#d4af37]/80 bg-[#d4af37]/5 px-3 py-1.5 rounded-lg border border-[#d4af37]/20">
-              <span>✓</span>
-              <span>
-                Coordenadas validadas: {Number(coords.lat).toFixed(4)}°, {Number(coords.lng).toFixed(4)}°
+            <div className="flex items-center gap-2 text-[11px] text-[#e4d18c] bg-[#d4af37]/[0.08] px-3.5 py-2 rounded-xl border border-[#d4af37]/25 mt-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#d4af37] animate-pulse shrink-0" />
+              <span className="font-mono">
+                Coordenadas sincronizadas: {Number(coords.lat).toFixed(4)}°, {Number(coords.lng).toFixed(4)}°
+              </span>
+              <span className="text-[10px] text-zinc-400 ml-auto hidden sm:inline">
+                Cúspides e fuso local prontos
               </span>
             </div>
           )}
@@ -351,10 +364,15 @@ export default function ColetaDadosBussola({
 
         {/* Linha 4: Área de Foco */}
         <div className="pt-2">
-          <label className="block text-[11px] font-mono uppercase tracking-wider text-zinc-400 mb-2">
-            5. Qual o seu foco principal no momento? (Opcional)
+          <label className="block text-xs font-medium text-zinc-300 mb-1">
+            <span className="text-[#d4af37]/80 font-mono text-[11px] mr-1.5">05.</span>
+            Qual o seu foco principal no momento? <span className="text-zinc-500 text-[11px] font-normal">(Opcional)</span>
           </label>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <p className="text-[11px] text-zinc-500 mb-2.5">
+            Personaliza as ênfases interpretativas das leituras para o seu momento atual.
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             {FOCUS_OPTIONS.map((opt) => {
               const selected = foco === opt.id;
               return (
@@ -362,14 +380,21 @@ export default function ColetaDadosBussola({
                   type="button"
                   key={opt.id}
                   onClick={() => setFoco(opt.id)}
-                  className={`text-left p-3 rounded-xl border transition-all ${
+                  className={`text-left p-3.5 rounded-xl border transition-all cursor-pointer relative ${
                     selected
-                      ? "bg-[#d4af37]/10 border-[#d4af37] text-zinc-100"
-                      : "bg-[#18181b]/60 border-white/5 text-zinc-400 hover:border-white/10 hover:text-zinc-200"
+                      ? "bg-gradient-to-br from-[#d4af37]/15 to-[#d4af37]/5 border-[#d4af37]/80 text-zinc-100 shadow-[0_0_20px_rgba(212,175,55,0.08)]"
+                      : "bg-[#141418]/60 border-white/[0.06] text-zinc-400 hover:border-white/15 hover:bg-[#141418] hover:text-zinc-200"
                   }`}
                 >
-                  <p className="text-xs font-semibold">{opt.rotulo}</p>
-                  <p className="text-[10px] text-zinc-500 mt-0.5 line-clamp-1">{opt.desc}</p>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className={`text-xs font-semibold ${selected ? "text-[#d4af37]" : "text-zinc-200"}`}>
+                      {opt.rotulo}
+                    </p>
+                    {selected && (
+                      <span className="w-2 h-2 rounded-full bg-[#d4af37]" />
+                    )}
+                  </div>
+                  <p className="text-[10px] text-zinc-500 mt-1 leading-snug">{opt.desc}</p>
                 </button>
               );
             })}
@@ -377,17 +402,17 @@ export default function ColetaDadosBussola({
         </div>
 
         {/* Loading ou Botão de Envio */}
-        <div className="pt-4">
+        <div className="pt-3">
           {loading ? (
-            <div className="w-full py-3.5 px-4 bg-[#18181b] border border-[#d4af37]/30 rounded-xl text-center space-y-2">
-              <div className="inline-block animate-spin text-base text-[#d4af37]">🧭</div>
+            <div className="w-full py-4 px-4 bg-[#141418] border border-[#d4af37]/30 rounded-xl text-center space-y-2">
+              <div className="inline-block animate-spin text-lg text-[#d4af37]">🧭</div>
               <p className="text-xs font-mono text-[#d4af37]">{etapaStatus || "Processando cálculo..."}</p>
               <p className="text-[10px] text-zinc-500">Isto leva apenas alguns instantes.</p>
             </div>
           ) : (
             <button
               type="submit"
-              className="w-full py-3.5 px-6 rounded-xl font-semibold text-xs tracking-wide uppercase transition-all bg-[#d4af37] hover:bg-[#e4d18c] text-[#09090b] shadow-lg shadow-[#d4af37]/10 active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2"
+              className="w-full py-3.5 px-6 rounded-xl font-semibold text-xs tracking-wider uppercase transition-all bg-gradient-to-r from-[#d4af37] via-[#e5c463] to-[#c79d2f] hover:brightness-110 active:scale-[0.99] text-zinc-950 shadow-[0_4px_25px_rgba(212,175,55,0.22)] cursor-pointer flex items-center justify-center gap-2"
             >
               <span>🧭</span>
               <span>Calibrar Minha Bússola & Gerar Mapa</span>
