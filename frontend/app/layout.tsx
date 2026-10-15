@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Bussola Astrologica",
-  description: "Leitura astrológica profunda e personalizada por Andrieli Oliver.",
+  title: "Bússola Astrológica",
+  description: "Leitura astrológica profunda e personalizada com Crassus Gobbi.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

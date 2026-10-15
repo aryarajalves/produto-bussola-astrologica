@@ -57,6 +57,19 @@ export default function AdminPage() {
       .catch(() => router.push("/admin/login"));
   }, []);
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get("tab");
+      if (tab) {
+        if (tab === "leitura" || tab === "analise") setActiveTab("pesquisa");
+        else if (tab === "diario" || tab === "historico") setActiveTab("historico");
+        else if (tab === "home" || tab === "bussola") setActiveTab("home");
+        else setActiveTab(tab);
+      }
+    }
+  }, []);
+
   const openClient = async (id: string) => {
     try {
       const c = await api.get<ClientDetail>(`/admin/clients/${id}`);
