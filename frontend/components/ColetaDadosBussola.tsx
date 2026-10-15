@@ -284,8 +284,8 @@ export default function ColetaDadosBussola({
                 className="w-full bg-[#18181b] border border-white/10 rounded-xl px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-[#d4af37]/60"
               >
                 {COUNTRIES.map((c) => (
-                  <option key={c} value={c} className="bg-zinc-900 text-zinc-200">
-                    {c}
+                  <option key={c.code} value={c.name} className="bg-zinc-900 text-zinc-200">
+                    {c.flag} {c.name}
                   </option>
                 ))}
               </select>
@@ -305,9 +305,9 @@ export default function ColetaDadosBussola({
                   className="w-full bg-[#18181b] border border-white/10 rounded-xl px-3 py-2 text-xs text-zinc-200 focus:outline-none focus:border-[#d4af37]/60"
                 >
                   <option value="">Selecione o estado</option>
-                  {BRAZIL_STATES.map((uf) => (
-                    <option key={uf} value={uf} className="bg-zinc-900 text-zinc-200">
-                      {uf}
+                  {BRAZIL_STATES.map((st) => (
+                    <option key={st.uf} value={st.uf} className="bg-zinc-900 text-zinc-200">
+                      {st.uf} - {st.name}
                     </option>
                   ))}
                 </select>
