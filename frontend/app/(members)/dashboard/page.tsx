@@ -278,6 +278,16 @@ export default function Dashboard() {
       .finally(() => setLoading(false));
   }, [router]);
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get("tab");
+      if (tab) {
+        setActiveSection(tab);
+      }
+    }
+  }, []);
+
   const loadSection = useCallback(async (key: string) => {
     if (key === "inicio" || key === "podcast" || key === "analise") {
       setActiveSection(key);
@@ -647,6 +657,41 @@ export default function Dashboard() {
           </div>
         ))}
       </div>
+
+      {/* ── Card de destaque da Análise do Dia & Previsão ── */}
+      <button
+        onClick={() => loadSection("analise")}
+        className="w-full mb-8 rounded-2xl p-5 sm:p-6 flex items-center gap-4 text-left transition-all hover:scale-[1.01] active:scale-[0.99]"
+        style={{
+          background: "linear-gradient(135deg, #121420 0%, #0c0e17 100%)",
+          border: "1px solid rgba(226, 184, 87, 0.45)",
+          boxShadow: "0 10px 30px rgba(0,0,0,0.5), 0 0 24px rgba(226, 184, 87, 0.08)",
+        }}
+      >
+        <div
+          className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0"
+          style={{ background: "rgba(226, 184, 87, 0.12)", border: "1px solid rgba(226, 184, 87, 0.3)", color: "#E2B857" }}
+        >
+          ☽
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded" style={{ background: "rgba(226, 184, 87, 0.15)", color: "#E2B857" }}>
+              ✦ Decisão & Timing
+            </span>
+            <span className="text-xs" style={{ color: "#8A8F9E" }}>
+              Atualizado hoje
+            </span>
+          </div>
+          <p className="font-extrabold text-base sm:text-lg text-white">
+            Análise do Dia & Previsão de Período
+          </p>
+          <p className="text-xs sm:text-sm mt-0.5" style={{ color: "#C5C8D4" }}>
+            Acesse as 5 forças ativas no seu céu, o planeta líder e a síntese prática para seus negócios e rotina.
+          </p>
+        </div>
+        <div className="flex-shrink-0 text-xl font-bold" style={{ color: "#E2B857" }}>›</div>
+      </button>
 
       {chart?.svg && (
         <div
