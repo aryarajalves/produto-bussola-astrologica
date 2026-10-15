@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { api, clearToken } from "@/lib/api";
+import AnaliseDoDia from "@/components/AnaliseDoDia";
 
 const C = {
   bg: "#0f0b1e",
@@ -210,8 +211,6 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [sectionLoading, setSectionLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [pdfLoading, setPdfLoading] = useState(false);
-  const [pdfError, setPdfError] = useState("");
   const [podcastLoading, setPodcastLoading] = useState(false);
   const [podcastUrl, setPodcastUrl] = useState<string | null>(null);
   const [podcastError, setPodcastError] = useState("");
@@ -279,8 +278,18 @@ export default function Dashboard() {
       .finally(() => setLoading(false));
   }, [router]);
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get("tab");
+      if (tab) {
+        setActiveSection(tab);
+      }
+    }
+  }, []);
+
   const loadSection = useCallback(async (key: string) => {
-    if (key === "inicio" || key === "podcast") {
+    if (key === "inicio" || key === "podcast" || key === "analise") {
       setActiveSection(key);
       setSectionContent(null);
       return;
@@ -297,25 +306,6 @@ export default function Dashboard() {
       setSectionLoading(false);
     }
   }, []);
-
-  const downloadPdf = async () => {
-    setPdfLoading(true);
-    setPdfError("");
-    try {
-      const blob = await api.download("/members/chart/pdf");
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "mapa-da-alma.pdf";
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (e: unknown) {
-      setPdfError(e instanceof Error ? e.message : "Erro ao gerar PDF");
-      setTimeout(() => setPdfError(""), 5000);
-    } finally {
-      setPdfLoading(false);
-    }
-  };
 
   const generatePodcast = async () => {
     // Libera URL anterior para evitar memory leak
@@ -402,6 +392,30 @@ export default function Dashboard() {
           <div className="h-px" style={{ background: C.border }} />
         </div>
 
+        {/* ── Análise do dia — a parte que se usa toda semana ── */}
+        <button
+          onClick={() => { loadSection("analise"); setSidebarOpen(false); }}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all text-left hover:opacity-90"
+          style={{
+            background: activeSection === "analise" ? C.dark : "transparent",
+            color: "#ffffff",
+            border: `1px solid ${activeSection === "analise" ? C.gold + "66" : C.border}`,
+          }}
+        >
+          <span className="text-base" style={{ color: C.gold }}>☽</span>
+          <div className="flex-1 min-w-0">
+            <p className="leading-tight">Análise do dia</p>
+            <p className="text-xs font-normal leading-tight mt-0.5" style={{ color: "rgba(255, 255, 255, 0.6)" }}>
+              Escolha uma data
+            </p>
+          </div>
+        </button>
+
+        {/* ── Separador ── */}
+        <div className="pt-2 pb-1">
+          <div className="h-px" style={{ background: C.border }} />
+        </div>
+
         {/* ── Podcast da Alma — destaque especial ── */}
         <button
           onClick={() => { loadSection("podcast"); setSidebarOpen(false); }}
@@ -442,19 +456,6 @@ export default function Dashboard() {
           <p className="text-xs mt-1" style={{ color: "rgba(255, 255, 255, 0.6)" }}>{readSections.size}/7 seções lidas</p>
         </div>
 
-        <button
-          onClick={downloadPdf}
-          disabled={pdfLoading}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all disabled:opacity-60"
-          style={{ background: C.dark, color: C.gold, border: `1px solid ${C.border}` }}
-        >
-          <span>{pdfLoading ? "⏳" : "⬇️"}</span>
-          <span>{pdfLoading ? "Gerando PDF..." : "Baixar PDF"}</span>
-        </button>
-
-        {pdfError && (
-          <p className="text-xs px-2 mt-1" style={{ color: "#ff8080" }}>{pdfError}</p>
-        )}
 
         {user?.role === "admin" && (
           <button
@@ -657,6 +658,41 @@ export default function Dashboard() {
         ))}
       </div>
 
+      {/* ── Card de destaque da Análise do Dia & Previsão ── */}
+      <button
+        onClick={() => loadSection("analise")}
+        className="w-full mb-8 rounded-2xl p-5 sm:p-6 flex items-center gap-4 text-left transition-all hover:scale-[1.01] active:scale-[0.99]"
+        style={{
+          background: "linear-gradient(135deg, #121420 0%, #0c0e17 100%)",
+          border: "1px solid rgba(226, 184, 87, 0.45)",
+          boxShadow: "0 10px 30px rgba(0,0,0,0.5), 0 0 24px rgba(226, 184, 87, 0.08)",
+        }}
+      >
+        <div
+          className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0"
+          style={{ background: "rgba(226, 184, 87, 0.12)", border: "1px solid rgba(226, 184, 87, 0.3)", color: "#E2B857" }}
+        >
+          ☽
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded" style={{ background: "rgba(226, 184, 87, 0.15)", color: "#E2B857" }}>
+              ✦ Decisão & Timing
+            </span>
+            <span className="text-xs" style={{ color: "#8A8F9E" }}>
+              Atualizado hoje
+            </span>
+          </div>
+          <p className="font-extrabold text-base sm:text-lg text-white">
+            Análise do Dia & Previsão de Período
+          </p>
+          <p className="text-xs sm:text-sm mt-0.5" style={{ color: "#C5C8D4" }}>
+            Acesse as 5 forças ativas no seu céu, o planeta líder e a síntese prática para seus negócios e rotina.
+          </p>
+        </div>
+        <div className="flex-shrink-0 text-xl font-bold" style={{ color: "#E2B857" }}>›</div>
+      </button>
+
       {chart?.svg && (
         <div
           className="w-full mb-8 rounded-2xl overflow-hidden flex items-center justify-center"
@@ -704,6 +740,7 @@ export default function Dashboard() {
 
   // ── Conteúdo principal ───────────────────────────────────────────────────
   const mainContent = () => {
+    if (activeSection === "analise") return <AnaliseDoDia nome={user?.name} />;
     if (activeSection === "podcast") return podcastPage();
     if (activeSection === "inicio") return inicioPage();
 

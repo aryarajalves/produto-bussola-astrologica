@@ -18,6 +18,8 @@ from services.email_service import send_boas_vindas
 
 logger = logging.getLogger(__name__)
 
+from services.analise_service import gerar_analise
+
 router = APIRouter(prefix="/admin", tags=["admin-chart"])
 
 SECTION_ORDER = [
@@ -265,16 +267,21 @@ async def generate_manual(
         "espera_descobrir": body.form_espera_descobrir or "",
     }
 
+    custo_info = {}
     try:
-        sections_dict = await generate_sections(
+        sections_dict, custo_info = await generate_sections(
             chart_data=chart_data,
             form_answers=form_answers,
             focus_areas=body.focus_areas,
             name=body.name,
+            return_cost=True,
         )
     except Exception as e:
         logger.warning(f"IA indisponível, gerando interpretação com fallback: {e}")
         sections_dict = _generate_fallback_sections(user.name, chart_data)
+
+    if custo_info and chart_data:
+        chart_data["openai_cost"] = custo_info
 
     chart = db.query(Chart).filter(Chart.user_id == user.id).first()
     if not chart:
@@ -317,7 +324,12 @@ async def generate_manual(
         birth_time=str(user.birth_time) if user.birth_time else "",
         status="success",
         error_message="",
-        model_used="kerykeion / gemini",
+        model_used=custo_info.get("model") or "gpt-4o",
+        prompt_tokens=custo_info.get("prompt_tokens", 0),
+        completion_tokens=custo_info.get("completion_tokens", 0),
+        total_tokens=custo_info.get("total_tokens", 0),
+        cost_usd=custo_info.get("cost_usd", 0.0),
+        cost_brl=custo_info.get("cost_brl", 0.0),
     )
     db.add(gen_log)
     db.commit()
@@ -429,16 +441,21 @@ async def generate_chart_for_client(
         "espera_descobrir": user.form_espera_descobrir or "",
     }
 
+    custo_info = {}
     try:
-        sections_dict = await generate_sections(
+        sections_dict, custo_info = await generate_sections(
             chart_data=chart_data,
             form_answers=form_answers,
             focus_areas=user.focus_areas or [],
             name=user.name,
+            return_cost=True,
         )
     except Exception as e:
         logger.warning(f"Geração com IA falhou, usando interpretação com fallback: {e}")
         sections_dict = _generate_fallback_sections(user.name, chart_data)
+
+    if custo_info and chart_data:
+        chart_data["openai_cost"] = custo_info
 
     user.sun_sign = sun_sign or user.sun_sign
     user.moon_sign = moon_sign or user.moon_sign
@@ -489,7 +506,12 @@ async def generate_chart_for_client(
         birth_time=str(user.birth_time) if user.birth_time else "",
         status="success",
         error_message="",
-        model_used="kerykeion / gemini",
+        model_used=custo_info.get("model") or "gpt-4o",
+        prompt_tokens=custo_info.get("prompt_tokens", 0),
+        completion_tokens=custo_info.get("completion_tokens", 0),
+        total_tokens=custo_info.get("total_tokens", 0),
+        cost_usd=custo_info.get("cost_usd", 0.0),
+        cost_brl=custo_info.get("cost_brl", 0.0),
     )
     db.add(gen_log)
     db.commit()
@@ -723,4 +745,30 @@ def delete_single_generation_log(
         return {"success": True, "message": "Registro do histórico excluído com sucesso."}
 
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Registro de histórico não encontrado.")
+
+
+
+class AnaliseClienteRequest(BaseModel):
+    data: date
+    data_fim: Optional[date] = None
+    area: Optional[str] = None
+    pergunta: Optional[str] = None
+    forcar: bool = False
+
+
+@router.post("/clients/{client_id}/analise")
+async def analise_do_cliente(
+    client_id: str,
+    body: AnaliseClienteRequest,
+    admin=Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """A leitura de trânsitos de um cliente, para o Crassus ler no painel."""
+    user = db.query(User).filter(User.id == client_id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cliente não encontrado.")
+    return await gerar_analise(
+        user=user, db=db, data_alvo=body.data, data_fim=body.data_fim,
+        area=body.area, pergunta=body.pergunta, forcar=body.forcar,
+    )
 

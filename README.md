@@ -6,6 +6,7 @@ Plataforma SaaS completa de astrologia e autoconhecimento com cálculo astronôm
 
 ## ✨ Principais Funcionalidades
 
+- **Análise do Dia (trânsitos):** A pessoa escolhe qualquer data e recebe onde os cinco planetas rápidos (Lua, Sol, Mercúrio, Vênus, Marte) estão passando nas casas do **mapa dela**, o que cada posição abre, até quando dura e uma síntese costurando as cinco numa leitura só. Cada data fica guardada e o histórico reabre sem recalcular.
 - **Cálculo Astronômico Preciso:** Posicionamento de planetas, cúspides de casas e aspectos utilizando astronomia real (`kerykeion`, `pyswisseph`).
 - **Mandala Astrológica Interativa:** Renderização SVG em alta definição, controles de tela cheia (100vw x 100vh), zoom in/out via botões e scroll do mouse, e navegação por arraste.
 - **Relatórios Cósmicos em PDF:** Exportação de mapa astral e interpretações aprofundadas.
@@ -58,3 +59,30 @@ Plataforma SaaS completa de astrologia e autoconhecimento com cálculo astronôm
 3. **Executar Testes Unitários:**
    - **Frontend:** `docker exec bussolaapp_frontend npm test -- --run`
    - **Backend:** `docker exec -e PYTHONPATH=/app bussolaapp_backend pytest tests`
+     (`pytest` não está na imagem de produção — instale com
+     `pip install -r requirements-dev.txt` no ambiente onde for rodar)
+
+---
+
+## 🧭 Como a Análise do Dia funciona
+
+Três peças, nesta ordem:
+
+1. **`backend/services/transit_service.py`** — calcula. Monta o mapa natal da
+   pessoa e o céu da data escolhida (meio-dia no local de nascimento, porque a
+   Lua anda meio grau por hora) e projeta os cinco planetas rápidos **nas casas
+   natais** via `house_comparison.second_points_in_first_houses`. Depois procura,
+   dia a dia, até quando cada um continua naquela casa.
+2. **`backend/services/interpretacoes.py`** — o texto. 60 blocos, 5 planetas ×
+   12 casas. **É material do Crassus e o arquivo está marcado como rascunho
+   aguardando a revisão dele.** A IA não escreve estes textos.
+3. **`backend/prompts/transito_diario.txt`** — a síntese. A IA recebe os cinco
+   blocos já escritos e costura uma leitura de 90 a 130 palavras, sem nenhum
+   termo de astrologia no corpo e terminando em algo executável no mesmo dia.
+
+Rotas: `POST /members/analise` (`{"data": "2026-10-06", "forcar": false}`) e
+`GET /members/analises` (histórico). A tabela `analises` é criada sozinha pelo
+`Base.metadata.create_all` no boot — não precisa de script de migração.
+
+Por que só cinco planetas: são os que mudam de casa dentro de uma vida. Os
+lentos ficam anos no mesmo lugar e não dizem nada sobre um dia específico.

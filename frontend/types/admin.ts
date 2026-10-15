@@ -72,6 +72,17 @@ export interface Client {
   email_sent_at: string | null;
 }
 
+export interface OpenAICostInfo {
+  model?: string;
+  prompt_tokens?: number;
+  completion_tokens?: number;
+  total_tokens?: number;
+  cost_usd?: number;
+  cost_brl?: number;
+  cost_formatted_usd?: string;
+  cost_formatted_brl?: string;
+}
+
 export interface ClientDetail {
   id: string;
   name: string;
@@ -90,11 +101,13 @@ export interface ClientDetail {
   form_vida_agora: string;
   form_carrega_tempo: string;
   form_espera_descobrir: string;
+  openai_cost?: OpenAICostInfo | null;
   chart: {
     id: string;
     svg_content: string;
     chart_data: unknown;
     status: string;
+    openai_cost?: OpenAICostInfo | null;
   } | null;
   sections: { section_key: string; section_order: number; content: string }[];
 }

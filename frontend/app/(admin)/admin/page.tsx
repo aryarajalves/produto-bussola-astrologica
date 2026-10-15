@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { C, type DashboardData, type ClientDetail } from "@/types/admin";
+import PainelAluno, { type AreaAluno } from "@/components/PainelAluno";
+import Tutorial, { tutorialPendente } from "@/components/Tutorial";
 import AdminSidebar from "@/components/AdminSidebar";
 import PesquisaClientes from "@/components/PesquisaClientes";
 import ClientDrawer from "@/components/ClientDrawer";
@@ -19,6 +21,9 @@ export default function AdminPage() {
   const [selectedClient, setSelectedClient] = useState<ClientDetail | null>(null);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [currentUser, setCurrentUser] = useState<{ name?: string; email?: string } | null>(null);
+  // null = ainda nao sabemos. Nada de gestao e desenhado antes de saber.
+  const [papel, setPapel] = useState<string | null>(null);
+  const [tutorialAberto, setTutorialAberto] = useState(false);
   const router = useRouter();
 
   const fetchDashboard = useCallback(async () => {
@@ -36,14 +41,20 @@ export default function AdminPage() {
       router.push("/admin/login");
       return;
     }
-    api.get<{ name: string; email: string }>("/auth/me")
+    api.get<{ name: string; email: string; role?: string }>("/auth/me")
       .then((res) => {
         if (res && res.email) {
           setCurrentUser(res);
+          setPapel(res.role || "client");
+          // O tour e do aluno: admin nao precisa que expliquem o painel dele.
+          if (res.role !== "admin" && tutorialPendente()) setTutorialAberto(true);
+          // O painel de gestao so e montado para quem e admin de verdade.
+          // Antes disto bastava ter token: um cliente logado via a tela toda
+          // e so tomava o erro depois, vindo do backend.
+          if (res.role === "admin") fetchDashboard();
         }
       })
-      .catch(() => {});
-    fetchDashboard();
+      .catch(() => router.push("/admin/login"));
   }, []);
 
   const openClient = async (id: string) => {
@@ -96,6 +107,13 @@ export default function AdminPage() {
         onSelectTab={setActiveTab}
         onLogout={() => setShowLogoutModal(true)}
         currentUser={currentUser}
+        papel={papel || "client"}
+      />
+
+      <Tutorial
+        aberto={tutorialAberto}
+        onFechar={() => setTutorialAberto(false)}
+        nome={currentUser?.name}
       />
 
       {/* Conteúdo Principal */}
@@ -109,7 +127,13 @@ export default function AdminPage() {
           }}
         >
           <h1 className="text-xl font-bold" style={{ color: C.light }}>
-            {activeTab === "home"
+            {papel !== "admin"
+              ? activeTab === "home"
+                ? "Minha Bússola"
+                : activeTab === "pesquisa"
+                ? "A leitura do dia"
+                : "Diário de bordo"
+              : activeTab === "home"
               ? "Visão Geral (Home)"
               : activeTab === "pesquisa"
               ? "Pesquisa"
@@ -126,17 +150,39 @@ export default function AdminPage() {
               className="text-sm font-semibold tracking-wide"
               style={{ color: C.muted }}
             >
-              Bussola Astrologica
+              {papel !== "admin" ? "Bússola Astrológica" : "Bussola Astrologica"}
             </span>
           </div>
         </header>
 
         {/* Corpo da Página */}
         <main className="p-8 flex-1 overflow-auto">
+          {/* Enquanto o papel nao chega, nada e desenhado: o que vazava antes
+              era justamente a tela de gestao aparecendo durante esse vao. */}
+          {papel === null && (
+            <p className="text-sm" style={{ color: C.muted }}>Carregando...</p>
+          )}
+
+          {papel !== null && papel !== "admin" && (
+            <PainelAluno
+              area={(activeTab === "pesquisa"
+                ? "leitura"
+                : activeTab === "historico"
+                ? "diario"
+                : "bussola") as AreaAluno}
+              usuario={currentUser}
+              onIrPara={(a) =>
+                setActiveTab(a === "leitura" ? "pesquisa" : a === "diario" ? "historico" : "home")
+              }
+            />
+          )}
+
+          {papel === "admin" && (<>
           {/* Aba Home / Formulário de Coleta de Informações */}
           {activeTab === "home" && (
             <div className="w-full">
               <LeadQuestionnaire
+                papel={papel || "client"}
                 onClientCreated={() => {
                   fetchDashboard();
                 }}
@@ -166,6 +212,7 @@ export default function AdminPage() {
 
           {/* Aba Gestão de Usuários */}
           {activeTab === "gestao_usuarios" && <GestaoUsuarios />}
+          </>)}
         </main>
       </div>
 

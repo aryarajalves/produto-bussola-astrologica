@@ -1,0 +1,10 @@
+# Dependências só de desenvolvimento e teste.
+#
+# Ficam fora de requirements.txt de propósito: a imagem de produção não precisa
+# de pytest. Para rodar a suíte localmente:
+#   pip install -r requirements.txt -r requirements-dev.txt
+#   pytest tests
+-r requirements.txt
+
+pytest>=8.3.0
+pytest-asyncio>=0.24.0
