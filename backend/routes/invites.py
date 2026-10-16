@@ -1,3 +1,4 @@
+import os
 import secrets
 from datetime import datetime, timedelta
 from typing import Optional, List
@@ -8,7 +9,7 @@ from sqlalchemy import func, desc
 
 from database import get_db
 from models.models import User, UserInvite, RegistrationVerification
-from routes.auth import require_admin, hash_password, create_token
+from routes.auth import require_admin, get_admin_or_api_key, hash_password, create_token
 from services.brevo_service import send_brevo_verification_code
 import logging
 
@@ -33,7 +34,7 @@ class RegisterWithInviteRequest(BaseModel):
 @router.post("/admin/invites")
 def create_invite(
     body: CreateInviteRequest,
-    current_user: User = Depends(require_admin),
+    current_user: User = Depends(get_admin_or_api_key),
     db: Session = Depends(get_db),
 ):
     """Gera um novo link de convite para cadastro de Aluno ou Admin."""
@@ -68,6 +69,9 @@ def create_invite(
 
     logger.info(f"Convite gerado com sucesso pelo admin {current_user.email}: role={role}, validity={validity}")
 
+    base_url = (os.getenv("DASHBOARD_URL") or "https://bussolaastrologica.com.br").rstrip("/")
+    invite_path = f"/cadastro?token={invite.token}"
+
     return {
         "id": invite.id,
         "token": invite.token,
@@ -76,7 +80,8 @@ def create_invite(
         "validity_type": invite.validity_type,
         "expires_at": invite.expires_at.isoformat() + "Z" if invite.expires_at else None,
         "created_at": invite.created_at.isoformat() + "Z",
-        "invite_path": f"/cadastro?token={invite.token}",
+        "invite_path": invite_path,
+        "invite_url": f"{base_url}{invite_path}",
     }
 
 

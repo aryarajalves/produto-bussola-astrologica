@@ -362,45 +362,6 @@ export default function ColetaDadosBussola({
           )}
         </div>
 
-        {/* Linha 4: Área de Foco */}
-        <div className="pt-2">
-          <label className="block text-xs font-medium text-zinc-300 mb-1">
-            <span className="text-[#d4af37]/80 font-mono text-[11px] mr-1.5">05.</span>
-            Qual o seu foco principal no momento? <span className="text-zinc-500 text-[11px] font-normal">(Opcional)</span>
-          </label>
-          <p className="text-[11px] text-zinc-500 mb-2.5">
-            Personaliza as ênfases interpretativas das leituras para o seu momento atual.
-          </p>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            {FOCUS_OPTIONS.map((opt) => {
-              const selected = foco === opt.id;
-              return (
-                <button
-                  type="button"
-                  key={opt.id}
-                  onClick={() => setFoco(opt.id)}
-                  className={`text-left p-3.5 rounded-xl border transition-all cursor-pointer relative ${
-                    selected
-                      ? "bg-gradient-to-br from-[#d4af37]/15 to-[#d4af37]/5 border-[#d4af37]/80 text-zinc-100 shadow-[0_0_20px_rgba(212,175,55,0.08)]"
-                      : "bg-[#141418]/60 border-white/[0.06] text-zinc-400 hover:border-white/15 hover:bg-[#141418] hover:text-zinc-200"
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <p className={`text-xs font-semibold ${selected ? "text-[#d4af37]" : "text-zinc-200"}`}>
-                      {opt.rotulo}
-                    </p>
-                    {selected && (
-                      <span className="w-2 h-2 rounded-full bg-[#d4af37]" />
-                    )}
-                  </div>
-                  <p className="text-[10px] text-zinc-500 mt-1 leading-snug">{opt.desc}</p>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
         {/* Loading ou Botão de Envio */}
         <div className="pt-3">
           {loading ? (

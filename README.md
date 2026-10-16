@@ -7,6 +7,9 @@ Plataforma SaaS completa de astrologia e autoconhecimento com cálculo astronôm
 ## ✨ Principais Funcionalidades
 
 - **Análise do Dia (trânsitos):** A pessoa escolhe qualquer data e recebe onde os cinco planetas rápidos (Lua, Sol, Mercúrio, Vênus, Marte) estão passando nas casas do **mapa dela**, o que cada posição abre, até quando dura e uma síntese costurando as cinco numa leitura só. Cada data fica guardada e o histórico reabre sem recalcular.
+- **Diário de Bordo Inteligente:** Histórico unificado com paginação elegante de até 20 itens por página, atualização automática ao gerar novas análises e filtros rápidos.
+- **Segurança & Sanitização de Entradas:** Sanitização rigorosa tanto no Frontend quanto no Backend contra injeções de HTML, templates e comandos indesejados nas perguntas do aluno.
+- **API Externa de Convites Permanentes:** Endpoint seguro via `X-API-Key` para emissão automatizada de links de convites completos e sem expiração por plataformas externas.
 - **Cálculo Astronômico Preciso:** Posicionamento de planetas, cúspides de casas e aspectos utilizando astronomia real (`kerykeion`, `pyswisseph`).
 - **Mandala Astrológica Interativa:** Renderização SVG em alta definição, controles de tela cheia (100vw x 100vh), zoom in/out via botões e scroll do mouse, e navegação por arraste.
 - **Relatórios Cósmicos em PDF:** Exportação de mapa astral e interpretações aprofundadas.

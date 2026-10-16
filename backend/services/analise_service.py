@@ -7,6 +7,8 @@ só quem pergunta.
 """
 from __future__ import annotations
 
+import re
+import html
 import logging
 from datetime import date, datetime, timedelta
 
@@ -29,6 +31,27 @@ logger = logging.getLogger(__name__)
 LIMITE_PASSADO = 365 * 2    # dois anos para trás: histórico já vivido
 LIMITE_FUTURO = 365         # um ano para frente: além disso não é leitura, é adivinhação
 LIMITE_PERIODO_DIAS = 90    # até 90 dias de janela para previsão de período
+
+# Expressões que tentam quebrar contexto da IA
+_PADROES_INJECAO_PROMPT = re.compile(
+    r"(?i)\b(ignore (all )?previous instructions|system:|assistant:|prompt injection|desconsidere as instrucoes|esquece o que foi dito|delete all|drop table|curl |bash |sudo |rm -rf)\b"
+)
+
+def sanitizar_pergunta(texto: str | None) -> str | None:
+    """Sanitiza o texto da pergunta do usuário removendo tags HTML, scripts e caracteres de código."""
+    if not texto:
+        return None
+    # 1. Unescape caso venha codificado
+    t = html.unescape(texto)
+    # 2. Remove tags HTML/XML (<script>, <style>, <img>, etc)
+    t = re.sub(r"<[^>]*>", " ", t)
+    # 3. Remove blocos com chaves de template/código ${...} ou {{...}}
+    t = re.sub(r"[{}\[\]<>\$]", "", t)
+    # 4. Remove tentativas de injeção de prompt críticas
+    t = _PADROES_INJECAO_PROMPT.sub("", t)
+    # 5. Normaliza espaços múltiplos
+    t = re.sub(r"\s+", " ", t).strip()
+    return t[:300] if t else None
 
 
 def dados_de_nascimento(user: User) -> tuple:
@@ -132,7 +155,7 @@ async def gerar_analise(
     )
 
     area_limpa = (area or "").strip().lower() or None
-    pergunta_limpa = (pergunta or "").strip()[:300] or None
+    pergunta_limpa = sanitizar_pergunta(pergunta)
     fim_iso = fim_valido.isoformat() if fim_valido else None
 
     ctx_existente = (existente.contexto or {}) if existente else {}

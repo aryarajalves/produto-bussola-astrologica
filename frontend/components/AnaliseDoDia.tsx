@@ -234,6 +234,14 @@ interface ItemHistorico {
   };
 }
 
+function sanitizarEntradaTexto(texto: string): string {
+  // Remove tags <script> e caracteres de código perigosos (<, >, {, }, $, [, ])
+  return texto
+    .replace(/<[^>]*>/g, "")
+    .replace(/[{}\[\]<>\$]/g, "")
+    .slice(0, 300);
+}
+
 function hoje(): string {
   const d = new Date();
   return new Date(d.getTime() - d.getTimezoneOffset() * 60_000).toISOString().slice(0, 10);
@@ -263,10 +271,12 @@ export default function AnaliseDoDia({
   nome,
   analiseIdInicial,
   dataInicial,
+  onAnaliseGerada,
 }: {
   nome?: string;
   analiseIdInicial?: string | null;
   dataInicial?: string | null;
+  onAnaliseGerada?: () => void;
 }) {
   const [modo, setModo] = useState<"dia" | "periodo">("dia");
   const [data, setData] = useState(dataInicial || hoje());
@@ -360,12 +370,13 @@ export default function AnaliseDoDia({
         setModo("periodo");
       }
       carregarHistorico();
+      onAnaliseGerada?.();
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Não foi possível ler essa data.");
     } finally {
       setCarregando(false);
     }
-  }, [carregarHistorico, area, pergunta, modo, dataFim]);
+  }, [carregarHistorico, onAnaliseGerada, area, pergunta, modo, dataFim]);
 
   const aplicarAtalhoPeriodo = (dias: number) => {
     const base = data || hoje();
@@ -571,7 +582,7 @@ export default function AnaliseDoDia({
               value={pergunta}
               maxLength={300}
               placeholder="Ex.: Tenho uma reunião com cliente para fechar proposta e preciso saber como conduzir o preço..."
-              onChange={(e) => setPergunta(e.target.value)}
+              onChange={(e) => setPergunta(sanitizarEntradaTexto(e.target.value))}
               className="w-full px-4 py-2.5 rounded-xl text-sm outline-none resize-y transition-all focus:border-[#E2B857]/50"
               style={{ background: T.surface2, color: T.text, border: `1px solid ${T.border}` }}
             />

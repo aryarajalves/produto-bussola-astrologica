@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import Optional
+from fastapi import APIRouter, Depends, HTTPException, Header, status
 from fastapi.security import OAuth2PasswordBearer
 import jwt
 from jwt.exceptions import PyJWTError as JWTError
@@ -67,6 +68,56 @@ def require_admin(current_user: User = Depends(get_current_user)) -> User:
     if current_user.role != "admin":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acesso restrito a administradores")
     return current_user
+
+
+EXTERNAL_API_KEY = os.getenv("EXTERNAL_API_KEY", "")
+
+def get_admin_or_api_key(
+    x_api_key: Optional[str] = Header(None, alias="X-API-Key"),
+    authorization: Optional[str] = Header(None),
+    db: Session = Depends(get_db),
+) -> User:
+    """
+    Autenticação dupla: aceita tanto a X-API-Key externa quanto o Bearer JWT do admin.
+    Permite que plataformas externas gerem convites sem login de sessão.
+    """
+    # 1. Verifica X-API-Key
+    if x_api_key:
+        api_key_configurada = os.getenv("EXTERNAL_API_KEY", "").strip()
+        if not api_key_configurada or x_api_key.strip() != api_key_configurada:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Chave de API externa (X-API-Key) inválida ou não configurada.",
+            )
+        # Associa a requisição ao usuário admin existente no banco
+        admin_user = (
+            db.query(User)
+            .filter(User.role == "admin", User.is_active == True)
+            .order_by(User.created_at.asc())
+            .first()
+        )
+        if not admin_user:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Nenhum administrador encontrado para associar ao convite.",
+            )
+        return admin_user
+
+    # 2. Verifica Bearer JWT (Painel do Administrador)
+    if authorization and authorization.startswith("Bearer "):
+        token = authorization.split("Bearer ")[1].strip()
+        payload = decode_token(token)
+        user = db.query(User).filter(User.id == payload["sub"]).first()
+        if not user or not user.is_active:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Usuário não encontrado")
+        if user.role != "admin":
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acesso restrito a administradores")
+        return user
+
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Autenticação necessária. Forneça o header 'X-API-Key' ou 'Authorization: Bearer <token>'."
+    )
 
 
 from sqlalchemy import func

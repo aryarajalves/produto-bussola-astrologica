@@ -6,7 +6,7 @@ from typing import Optional, List
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from sqlalchemy.orm import Session
 
 from models.models import User, Chart, ChartSection, Analise
@@ -16,7 +16,7 @@ from services.pdf_service import generate_pdf
 from services.podcast_service import generate_podcast
 from services.notebooklm_service import generate_notebooklm_podcast, _is_available as notebooklm_available
 from services.transit_service import AREAS
-from services.analise_service import gerar_analise
+from services.analise_service import gerar_analise, sanitizar_pergunta
 from services.interpretacoes import interpretacao
 from services.ai_service import generate_transit_synthesis
 from services.astro_service import generate_birth_chart
@@ -429,6 +429,21 @@ class AnaliseRequest(BaseModel):
     # não do cadastro: pergunta guardada no perfil envelhece em duas semanas.
     area: Optional[str] = None
     pergunta: Optional[str] = None
+
+    @field_validator("pergunta")
+    @classmethod
+    def validar_pergunta(cls, v: Optional[str]) -> Optional[str]:
+        if not v:
+            return None
+        return sanitizar_pergunta(v)
+
+    @field_validator("area")
+    @classmethod
+    def validar_area(cls, v: Optional[str]) -> Optional[str]:
+        if not v:
+            return None
+        limpa = v.strip().lower()
+        return limpa if limpa in AREAS else None
 
 
 def _dados_de_nascimento(user: User) -> tuple:
