@@ -259,10 +259,18 @@ function curta(iso: string): string {
   return `${d}/${m}`;
 }
 
-export default function AnaliseDoDia({ nome }: { nome?: string }) {
+export default function AnaliseDoDia({
+  nome,
+  analiseIdInicial,
+  dataInicial,
+}: {
+  nome?: string;
+  analiseIdInicial?: string | null;
+  dataInicial?: string | null;
+}) {
   const [modo, setModo] = useState<"dia" | "periodo">("dia");
-  const [data, setData] = useState(hoje());
-  const [dataFim, setDataFim] = useState(() => somaDias(7));
+  const [data, setData] = useState(dataInicial || hoje());
+  const [dataFim, setDataFim] = useState(() => somaDias(7, dataInicial || hoje()));
   const [areas, setAreas] = useState<{ id: string; rotulo: string }[]>([]);
   const [area, setArea] = useState("");
   const [pergunta, setPergunta] = useState("");
@@ -287,6 +295,37 @@ export default function AnaliseDoDia({ nome }: { nome?: string }) {
       .then(setAreas)
       .catch(() => setAreas([]));
   }, [carregarHistorico]);
+
+  // Carrega análise específica quando solicitado via histórico / Diário de bordo
+  useEffect(() => {
+    if (!analiseIdInicial) return;
+    let ativo = true;
+    (async () => {
+      try {
+        setCarregando(true);
+        const a = await api.get<Analise>(`/members/analises/${analiseIdInicial}`);
+        if (ativo && a) {
+          setAnalise(a);
+          setData(a.data);
+          if (a.data_fim) {
+            setDataFim(a.data_fim);
+            setModo("periodo");
+          } else {
+            setModo("dia");
+          }
+          if (a.contexto?.area) setArea(a.contexto.area);
+          if (a.contexto?.pergunta) setPergunta(a.contexto.pergunta);
+        }
+      } catch {
+        // Silencioso se não carregar
+      } finally {
+        if (ativo) setCarregando(false);
+      }
+    })();
+    return () => {
+      ativo = false;
+    };
+  }, [analiseIdInicial]);
 
   useEffect(() => {
     if (!carregando) {

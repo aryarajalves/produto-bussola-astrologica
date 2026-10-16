@@ -493,30 +493,77 @@ def listar_analises(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """O histórico lateral: as datas já consultadas, da mais recente para trás.
-
-    Sem posições, textos nem SVG de propósito: é uma lista de links. O corpo de
-    cada análise vem de /members/analise, que já devolve do cache.
-    """
+    """Histórico de buscas e leituras do usuário, da mais recente para trás."""
     analises = (
         db.query(Analise)
         .filter(Analise.user_id == current_user.id)
-        .order_by(Analise.data_alvo.desc())
-        .limit(60)
+        .order_by(Analise.created_at.desc())
+        .limit(100)
         .all()
     )
-    return [
-        {
-            "id": a.id,
+    itens = []
+    for a in analises:
+        ctx = a.contexto or {}
+        destaque = None
+        for p in (a.posicoes or []):
+            if p.get("destaque"):
+                destaque = p.get("planeta_pt") or p.get("planeta")
+                break
+        sintese_txt = (a.sintese or "").strip()
+        preview = (sintese_txt[:180] + "...") if len(sintese_txt) > 180 else sintese_txt
+
+        itens.append({
+            "id": str(a.id),
             "data": a.data_alvo.isoformat(),
-            "data_fim": (a.contexto or {}).get("data_fim"),
+            "data_fim": ctx.get("data_fim"),
+            "tipo": ctx.get("tipo") or ("periodo" if ctx.get("data_fim") else "dia"),
+            "pergunta": ctx.get("pergunta"),
+            "area": ctx.get("area"),
+            "sintese_preview": preview,
+            "planeta_destaque": destaque,
             "status": a.status,
             "tem_sintese": bool(a.sintese),
-            "contexto": a.contexto or {},
-            "created_at": a.created_at,
-        }
-        for a in analises
-    ]
+            "contexto": ctx,
+            "created_at": a.created_at.isoformat() if a.created_at else None,
+        })
+    return itens
+
+
+@router.get("/analises/{analise_id}")
+def obter_analise_por_id(
+    analise_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Retorna uma leitura específica do histórico de buscas pelo ID."""
+    analise = (
+        db.query(Analise)
+        .filter(Analise.id == analise_id, Analise.user_id == current_user.id)
+        .first()
+    )
+    if not analise:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Leitura não encontrada.")
+    hora_conhecida = bool(current_user.birth_time)
+    return _serializar(analise, hora_conhecida)
+
+
+@router.delete("/analises/{analise_id}")
+def deletar_analise(
+    analise_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Remove uma pesquisa do histórico de buscas do usuário."""
+    analise = (
+        db.query(Analise)
+        .filter(Analise.id == analise_id, Analise.user_id == current_user.id)
+        .first()
+    )
+    if not analise:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Leitura não encontrada.")
+    db.delete(analise)
+    db.commit()
+    return {"ok": True, "message": "Pesquisa removida do histórico."}
 
 
 @router.get("/areas")

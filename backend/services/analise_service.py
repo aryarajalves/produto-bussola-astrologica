@@ -204,6 +204,7 @@ async def gerar_analise(
         "area": area_limpa,
         "pergunta": pergunta_limpa,
         "data_fim": fim_iso,
+        "tipo": "periodo" if fim_valido else "dia",
         "movimentos_periodo": movimentos_periodo,
     }
 
@@ -238,7 +239,9 @@ async def gerar_analise(
         cidade=user.birth_city or "", pais=user.birth_country or "BR",
     )
 
-    analise = existente or Analise(user_id=user.id, data_alvo=data_alvo)
+    # Cria uma nova entrada no histórico para registrar a busca do usuário,
+    # preservando pesquisas anteriores do mesmo dia que tiveram outras dúvidas/contextos.
+    analise = Analise(user_id=user.id, data_alvo=data_alvo)
     analise.posicoes = posicoes
     analise.contexto = contexto
     analise.textos = textos
